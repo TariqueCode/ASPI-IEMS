@@ -1,0 +1,8 @@
+{
+  "name": "ASPI - Ashab Siraj Polytechnic Institute",
+  "description": "Official portal and administration dashboard for Ashab Siraj Polytechnic Institute (ASPI)",
+  "permissions": [],
+  "capabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

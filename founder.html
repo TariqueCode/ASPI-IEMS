@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="bn" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>প্রতিষ্ঠাতা পরিচিতি - মরহুম আলহাজ্ব সিরাজুল ইসলাম | আসহাব সিরাজ পলিটেকনিক ইনস্টিটিউট</title>
+    <link rel="icon" type="image/png" href="assets/uploads/1787121756078_5353.png">
+    
+    <script>
+        // Compatibility shim for iframe environments where window.fetch is a getter-only property
+        (function() {
+            try {
+                let _nativeFetch = window.fetch ? window.fetch.bind(window) : null;
+                Object.defineProperty(window, 'fetch', {
+                    get: function() { return _nativeFetch; },
+                    set: function(fn) { _nativeFetch = fn; },
+                    configurable: true,
+                    enumerable: true
+                });
+            } catch (e) {
+                try {
+                    let _nativeFetch = window.fetch;
+                    Object.defineProperty(Window.prototype, 'fetch', {
+                        get: function() { return _nativeFetch; },
+                        set: function(fn) { _nativeFetch = fn; },
+                        configurable: true,
+                        enumerable: true
+                    });
+                } catch (e2) {}
+            }
+        })();
+    </script>
+
+    <script>
+        // Synchronous immediate system / device dark mode detector (executes before HTML render to prevent flash)
+        (function() {
+            try {
+                const savedTheme = localStorage.getItem('aspi_theme_mode');
+                const systemPrefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                if (savedTheme === 'dark' || (!savedTheme && systemPrefersDark)) {
+                    document.documentElement.classList.add('dark');
+                } else if (savedTheme === 'light') {
+                    document.documentElement.classList.remove('dark');
+                } else if (systemPrefersDark) {
+                    document.documentElement.classList.add('dark');
+                }
+            } catch(e) {}
+        })();
+    </script>
+    <!-- Google Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        bn: ['Hind Siliguri', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            blue: '#0f172a',
+                            navy: '#1e3a8a',
+                            gold: '#facc15',
+                            light: '#f8fafc'
+                        }
+                    },
+                    animation: {
+                        'gradient': 'gradient 8s ease infinite'
+                    },
+                    keyframes: {
+                        gradient: { '0%, 100%': { backgroundPosition: '0% 50%' }, '50%': { backgroundPosition: '100% 50%' } }
+                    }
+                }
+            }
+        }
+    </script>
+    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <style>
+        :root { --dynamic-font: 'Hind Siliguri'; }
+        body { font-family: var(--dynamic-font), sans-serif; transition: font-size 0.3s ease; }
+        .glass-card { background: rgba(255, 255, 255, 0.94); backdrop-filter: blur(20px); border: 1px solid rgba(226, 232, 240, 0.85); box-shadow: 0 10px 30px -10px rgba(0,0,0,0.06); }
+        .dark .glass-card { background: rgba(15, 23, 42, 0.78); backdrop-filter: blur(24px); border: 1px solid rgba(99, 102, 241, 0.15); box-shadow: 0 14px 35px -10px rgba(0,0,0,0.6), inset 0 1px 1px rgba(255,255,255,0.06); }
+        .glass-nav { background: rgba(255, 255, 255, 0.96); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(226, 232, 240, 0.8); }
+        .dark .glass-nav { background: rgba(8, 14, 28, 0.92); backdrop-filter: blur(24px); border-bottom: 1px solid rgba(99, 102, 241, 0.15); box-shadow: 0 4px 20px rgba(0,0,0,0.4); }
+        .bg-gradient-anim { position: fixed; inset: 0; z-index: -2; background: linear-gradient(135deg, #f8fafc 0%, #edf2f7 50%, #f1f5f9 100%); }
+        .dark .bg-gradient-anim { position: fixed; inset: 0; z-index: -2; background: radial-gradient(circle at 50% 0%, #0c1224 0%, #030712 60%, #02040a 100%); }
+        ::-webkit-scrollbar { width: 8px; height: 8px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .dark ::-webkit-scrollbar-thumb { background: #334155; }
+        [x-cloak] { display: none !important; }
+        
+        /* Premium Floating Ambient Light Orbs for Dark Mode Depth */
+        @keyframes orbFloat1 {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(45px, 60px) scale(1.12); }
+        }
+        @keyframes orbFloat2 {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(-50px, 45px) scale(1.15); }
+        }
+        @keyframes orbFloat3 {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(35px, -45px) scale(0.95); }
+        }
+        .ambient-glow {
+            position: absolute;
+            border-radius: 9999px;
+            filter: blur(110px);
+            pointer-events: none;
+            opacity: 0.12;
+            transition: opacity 0.6s ease;
+        }
+        .dark .ambient-glow {
+            opacity: 0.32;
+        }
+        .ambient-glow-1 {
+            top: -5%;
+            left: 12%;
+            width: 38vw;
+            height: 38vw;
+            background: radial-gradient(circle, #6366f1 0%, rgba(99, 102, 241, 0) 70%);
+            animation: orbFloat1 18s ease-in-out infinite;
+        }
+        .ambient-glow-2 {
+            top: 42%;
+            right: 8%;
+            width: 34vw;
+            height: 34vw;
+            background: radial-gradient(circle, #f59e0b 0%, rgba(245, 158, 11, 0) 70%);
+            animation: orbFloat2 24s ease-in-out infinite;
+        }
+        .ambient-glow-3 {
+            bottom: 8%;
+            left: 18%;
+            width: 42vw;
+            height: 42vw;
+            background: radial-gradient(circle, #06b6d4 0%, rgba(6, 182, 212, 0) 70%);
+            animation: orbFloat3 20s ease-in-out infinite;
+        }
+    </style>
+</head>
+
+<body class="text-slate-800 dark:text-slate-100 transition-colors duration-500 overflow-x-hidden min-h-screen flex flex-col justify-between" x-data="founderApp" :style="`font-size: ${data.site.font_size || 16}px;`">
+
+    <style x-text="data.site.custom_font ? `@font-face { font-family: 'AdminCustomFont'; src: url('${data.site.custom_font}'); } :root { --dynamic-font: 'AdminCustomFont'; }` : ''"></style>
+
+    <div class="bg-gradient-anim"></div>
+    
+    <!-- Ambient Floating Orbs for Premium Dark/Light Depth -->
+    <div class="fixed inset-0 pointer-events-none z-[-1] overflow-hidden">
+        <div class="ambient-glow ambient-glow-1"></div>
+        <div class="ambient-glow ambient-glow-2"></div>
+        <div class="ambient-glow ambient-glow-3"></div>
+    </div>
+
+    <!-- Header / Navbar -->
+    <header class="glass-nav sticky top-0 z-50 w-full transition-all duration-300 shadow-sm">
+        <!-- Top Info & Quick Strip (Desktop Only with Live Newspaper Clock, Bangla & Hijri Date) -->
+        <div class="hidden lg:block bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 text-white text-[11px] py-1 px-4 border-b border-indigo-900/30">
+            <div class="container mx-auto flex justify-between items-center font-bold">
+                <!-- Left Side: Live Newspaper Date, Bengali Era & Hijri Date with Clock -->
+                <div class="flex items-center space-x-2 text-slate-200">
+                    <!-- Gregorian Date -->
+                    <span class="inline-flex items-center text-amber-300 font-extrabold">
+                        <i class="fa-regular fa-calendar-days mr-1.5 text-amber-400"></i>
+                        <span x-text="liveDate || 'আজকের তারিখ'"></span>
+                    </span>
+                    <span class="text-slate-600">|</span>
+                    
+                    <!-- Bengali Date (বঙ্গাব্দ) -->
+                    <span class="inline-flex items-center text-orange-300 font-bold" title="সংশোধিত বাংলা বর্ষপঞ্জি">
+                        <i class="fa-solid fa-feather-pointed mr-1.5 text-orange-400 text-[10px]"></i>
+                        <span x-text="liveBanglaDate || 'বঙ্গাব্দ'"></span>
+                    </span>
+                    <span class="text-slate-600">|</span>
+
+                    <!-- Hijri Date (হিজরি) -->
+                    <span class="inline-flex items-center text-teal-300 font-bold" title="হিজরি বর্ষপঞ্জি">
+                        <i class="fa-solid fa-moon mr-1.5 text-teal-400 text-[10px]"></i>
+                        <span x-text="liveHijriDate || 'হিজরি'"></span>
+                    </span>
+                    <span class="text-slate-600">|</span>
+
+                    <!-- Live Time -->
+                    <span class="inline-flex items-center text-emerald-400 font-black tracking-wide">
+                        <i class="fa-regular fa-clock mr-1.5 text-emerald-400"></i>
+                        <span x-text="liveTime || 'লাইভ সময়'"></span>
+                    </span>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <a :href="'tel:' + (data.site.phone || '+8801847310310')" class="hover:text-yellow-400 flex items-center transition-colors"><i class="fa-solid fa-phone text-emerald-400 mr-1"></i> <span x-text="data.site.phone || '+৮৮০ ১৮৪৭-৩১০৩১০'"></span></a>
+                    <a :href="'mailto:' + (data.site.email || 'ctgaspi@gmail.com')" class="hover:text-yellow-400 flex items-center transition-colors"><i class="fa-solid fa-envelope text-blue-400 mr-1"></i> <span x-text="data.site.email || 'ctgaspi@gmail.com'"></span></a>
+                    
+                    <div class="flex items-center space-x-1.5 pl-2 border-l border-slate-700">
+                        <a x-show="data.site.whatsapp" :href="getWhatsAppUrl(data.site.whatsapp)" target="_blank" class="w-5 h-5 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white flex items-center justify-center text-[10px] transition-transform hover:scale-110 shadow-xs" title="WhatsApp">
+                            <i class="fa-brands fa-whatsapp"></i>
+                        </a>
+                        <a x-show="data.site.instagram" :href="data.site.instagram" target="_blank" class="w-5 h-5 rounded-full bg-gradient-to-tr from-amber-500 via-pink-600 to-purple-600 text-white flex items-center justify-center text-[10px] transition-transform hover:scale-110 shadow-xs" title="Instagram">
+                            <i class="fa-brands fa-instagram"></i>
+                        </a>
+                        <a x-show="data.site.facebook" :href="data.site.facebook" target="_blank" class="w-5 h-5 rounded-full bg-blue-600 hover:bg-blue-500 text-white flex items-center justify-center text-[10px] transition-transform hover:scale-110 shadow-xs" title="Facebook">
+                            <i class="fa-brands fa-facebook-f"></i>
+                        </a>
+                        <a x-show="data.site.youtube" :href="data.site.youtube" target="_blank" class="w-5 h-5 rounded-full bg-red-600 hover:bg-red-500 text-white flex items-center justify-center text-[10px] transition-transform hover:scale-110 shadow-xs" title="YouTube">
+                            <i class="fa-brands fa-youtube"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="container mx-auto px-4 py-2 sm:py-2.5 flex items-center justify-between gap-3">
+            <!-- Brand Logo & Name (Single Line with Large Pure Logo & No Border) -->
+            <a href="index.html" class="flex items-center space-x-2.5 sm:space-x-3.5 cursor-pointer shrink-0 group">
+                <!-- Pure Large Logo without Box/Border -->
+                <div class="h-11 sm:h-13 lg:h-16 xl:h-20 w-auto flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform duration-300">
+                    <img :src="data.site.logo || 'assets/uploads/1787121756078_5353.png'" 
+                         @error="$el.src = $el.src.includes('ASPI-Logo.png') ? '' : 'assets/uploads/ASPI-Logo.png'" 
+                         class="h-full w-auto max-h-11 sm:max-h-13 lg:max-h-16 xl:max-h-20 object-contain drop-shadow-[0_2px_8px_rgba(0,0,0,0.15)] dark:drop-shadow-[0_2px_10px_rgba(255,255,255,0.2)]" 
+                         alt="ASPI Logo">
+                </div>
+                <div class="flex flex-col justify-center min-w-0">
+                    <h1 class="text-sm sm:text-base lg:text-lg xl:text-xl font-black text-slate-900 dark:text-white leading-tight whitespace-nowrap tracking-tight">
+                        আসহাব সিরাজ পলিটেকনিক ইনস্টিটিউট
+                    </h1>
+                    <p class="text-[9px] sm:text-[10px] lg:text-[11px] font-bold text-slate-500 dark:text-slate-400 tracking-tight whitespace-nowrap mt-1">
+                        Ashab Siraj Polytechnic Institute (ASPI) • কোড: ৭০৩৬১ • স্থাপিত: ২০১৯
+                    </p>
+                </div>
+            </a>
+
+            <!-- Desktop Navigation with Separators -->
+            <nav class="hidden xl:flex items-center space-x-0.5 font-bold text-xs shrink-0">
+                <a href="index.html" class="px-2.5 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-amber-400 rounded-lg transition-colors whitespace-nowrap flex items-center"><i class="fa-solid fa-house mr-1.5 text-indigo-500"></i> হোমপেজ</a>
+                
+                <span class="h-3.5 w-px bg-slate-300/80 dark:bg-slate-700/90 shrink-0 mx-0.5"></span>
+                <a href="index.html#departments" class="px-2.5 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-amber-400 rounded-lg transition-colors whitespace-nowrap">ডিপ্লোমা বিভাগ</a>
+                
+                <span class="h-3.5 w-px bg-slate-300/80 dark:bg-slate-700/90 shrink-0 mx-0.5"></span>
+                <a href="index.html#short_courses" class="px-2.5 py-1.5 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 rounded-lg transition-colors whitespace-nowrap">NSDA কোর্স</a>
+                
+                <span class="h-3.5 w-px bg-slate-300/80 dark:bg-slate-700/90 shrink-0 mx-0.5"></span>
+                <a href="index.html#facilities" class="px-2.5 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-amber-400 rounded-lg transition-colors whitespace-nowrap">সুযোগ-সুবিধা</a>
+                
+                <span class="h-3.5 w-px bg-slate-300/80 dark:bg-slate-700/90 shrink-0 mx-0.5"></span>
+                <a href="index.html#admission" class="px-2.5 py-1.5 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 rounded-lg transition-colors whitespace-nowrap">ভর্তি ও স্কলারশিপ</a>
+                
+                <span class="h-3.5 w-px bg-slate-300/80 dark:bg-slate-700/90 shrink-0 mx-0.5"></span>
+                <a href="founder.html" class="px-2.5 py-1.5 bg-amber-100 dark:bg-amber-950/70 text-amber-900 dark:text-amber-300 rounded-lg transition-colors font-black border border-amber-300 dark:border-amber-700 whitespace-nowrap">প্রতিষ্ঠাতা প্রোফাইল</a>
+
+                <span class="h-3.5 w-px bg-slate-300/80 dark:bg-slate-700/90 shrink-0 mx-1.5"></span>
+
+                <!-- Compact Theme Mode Toggle -->
+                <div class="relative flex items-center">
+                    <button @click="toggleTheme()" 
+                            type="button"
+                            class="relative inline-flex h-7 w-14 shrink-0 cursor-pointer rounded-full p-0.5 transition-colors duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500/40 border select-none shadow-inner"
+                            :class="darkMode ? 'bg-slate-950 border-slate-700/80' : 'bg-amber-100/90 border-amber-300'"
+                            :title="darkMode ? 'লাইট মোড' : 'ডার্ক মোড'">
+                        <span class="absolute inset-0 flex items-center justify-between px-2 text-[10px] pointer-events-none">
+                            <i class="fa-solid fa-sun text-amber-500 transition-opacity duration-300" :class="darkMode ? 'opacity-25' : 'opacity-0'"></i>
+                            <i class="fa-solid fa-moon text-indigo-300 transition-opacity duration-300" :class="darkMode ? 'opacity-0' : 'opacity-25'"></i>
+                        </span>
+                        <span class="pointer-events-none inline-flex h-6 w-6 transform items-center justify-center rounded-full shadow-md transition-transform duration-300 ease-out"
+                              :class="darkMode ? 'translate-x-7 bg-indigo-600 text-yellow-300 shadow-indigo-500/40 ring-1 ring-yellow-400/40' : 'translate-x-0 bg-white text-amber-600 shadow-amber-500/20 ring-1 ring-amber-400/50'">
+                            <i class="fa-solid text-[11px]" :class="darkMode ? 'fa-moon' : 'fa-sun'"></i>
+                        </span>
+                    </button>
+                </div>
+            </nav>
+
+            <!-- Mobile Action Buttons (Only Hamburger Menu) -->
+            <div class="xl:hidden flex items-center">
+                <button @click="mobileMenuOpen = !mobileMenuOpen" class="w-9 h-9 flex items-center justify-center text-lg text-slate-800 dark:text-white bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl">
+                    <i class="fa-solid" :class="mobileMenuOpen ? 'fa-xmark' : 'fa-bars'"></i>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Mobile Dropdown Menu -->
+        <div x-show="mobileMenuOpen" x-collapse class="xl:hidden border-t border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl shadow-2xl p-4 flex flex-col space-y-2 z-50">
+            <!-- Mobile Theme Toggle Inside Menu -->
+            <div class="flex items-center justify-between px-4 py-2.5 bg-slate-100/90 dark:bg-slate-800/90 rounded-xl border border-slate-200 dark:border-slate-700 mb-1">
+                <span class="text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center">
+                    <i class="fa-solid fa-circle-half-stroke mr-2 text-indigo-500"></i>
+                    <span>থিম মুড (ডার্ক / লাইট)</span>
+                </span>
+                <button @click="toggleTheme()" 
+                        type="button"
+                        class="relative inline-flex h-7 w-14 shrink-0 cursor-pointer rounded-full p-0.5 transition-colors duration-300 ease-in-out focus:outline-none border select-none shadow-inner"
+                        :class="darkMode ? 'bg-slate-950 border-slate-700/80' : 'bg-amber-100/90 border-amber-300'"
+                        :title="darkMode ? 'লাইট মোড' : 'ডার্ক মোড'">
+                    <span class="absolute inset-0 flex items-center justify-between px-2 text-[10px] pointer-events-none">
+                        <i class="fa-solid fa-sun text-amber-500 transition-opacity duration-300" :class="darkMode ? 'opacity-25' : 'opacity-0'"></i>
+                        <i class="fa-solid fa-moon text-indigo-300 transition-opacity duration-300" :class="darkMode ? 'opacity-0' : 'opacity-25'"></i>
+                    </span>
+                    <span class="pointer-events-none inline-flex h-6 w-6 transform items-center justify-center rounded-full shadow-md transition-transform duration-300 ease-out"
+                          :class="darkMode ? 'translate-x-7 bg-indigo-600 text-yellow-300 shadow-indigo-500/40 ring-1 ring-yellow-400/40' : 'translate-x-0 bg-white text-amber-600 shadow-amber-500/20 ring-1 ring-amber-400/50'">
+                        <i class="fa-solid text-[11px]" :class="darkMode ? 'fa-moon' : 'fa-sun'"></i>
+                    </span>
+                </button>
+            </div>
+
+            <a href="index.html" class="px-4 py-2.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl font-bold text-sm border border-slate-100 dark:border-slate-700"><i class="fa-solid fa-house mr-2 text-indigo-500"></i> হোমপেজে ফিরে যান</a>
+            <a href="founder.html" class="px-4 py-2.5 bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 rounded-xl font-bold text-sm border border-amber-200 dark:border-amber-800"><i class="fa-solid fa-user mr-2 text-amber-600"></i> প্রতিষ্ঠাতা প্রোফাইল</a>
+            <a href="index.html#departments" class="px-4 py-2.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl font-bold text-sm border border-slate-100 dark:border-slate-700">ডিপ্লোমা বিভাগসমূহ</a>
+            <a href="index.html#short_courses" class="px-4 py-2.5 bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 rounded-xl font-bold text-sm border border-indigo-200 dark:border-indigo-800">NSDA শর্ট কোর্সসমূহ</a>
+            <a href="index.html#facilities" class="px-4 py-2.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl font-bold text-sm border border-slate-100 dark:border-slate-700">ক্যাম্পাস সুযোগ-সুবিধা</a>
+            <a href="index.html#admission" class="px-4 py-2.5 bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 rounded-xl font-bold text-sm border border-emerald-200 dark:border-emerald-800">ভর্তি যোগ্যতা ও স্কলারশিপ</a>
+        </div>
+    </header>
+
+    <!-- Main Founder Showcase Container -->
+    <main class="container mx-auto px-4 py-8 sm:py-12 space-y-12 max-w-6xl">
+        
+        <!-- Breadcrumb & Back Navigation -->
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-2 text-xs font-bold text-slate-500 dark:text-slate-400">
+                <a href="index.html" class="hover:text-indigo-600 dark:hover:text-brand-gold flex items-center"><i class="fa-solid fa-house mr-1"></i> হোম</a>
+                <span>/</span>
+                <span class="text-amber-600 dark:text-amber-400">প্রতিষ্ঠাতা পরিচিতি</span>
+            </div>
+            <a href="index.html" class="inline-flex items-center px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-black text-slate-700 dark:text-slate-200 transition-colors border border-slate-200 dark:border-slate-700">
+                <i class="fa-solid fa-arrow-left mr-2"></i> হোমপেজে ফিরে যান
+            </a>
+        </div>
+
+        <!-- Founder Hero Header Showcase -->
+        <div class="glass-card rounded-[2.5rem] sm:rounded-[3.5rem] p-6 sm:p-12 shadow-2xl border-2 border-amber-200/80 dark:border-amber-900/50 relative overflow-hidden bg-gradient-to-br from-amber-50/50 via-white to-slate-50 dark:from-slate-900/90 dark:via-slate-900 dark:to-amber-950/30">
+            <div class="absolute -top-20 -right-20 w-96 h-96 bg-amber-400/20 dark:bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
+            
+            <div class="flex flex-col lg:flex-row items-center gap-8 lg:gap-12 relative z-10">
+                
+                <!-- Founder Portrait Frame with Royal Accents -->
+                <div class="w-60 h-60 sm:w-72 sm:h-72 shrink-0 rounded-3xl p-3 bg-gradient-to-tr from-amber-500 via-yellow-400 to-amber-600 shadow-2xl relative group">
+                    <div class="w-full h-full rounded-[1.4rem] overflow-hidden bg-slate-100 dark:bg-slate-800 relative">
+                        <img :src="data.site.founder?.image_url || 'assets/uploads/1786632189_4076.jpg'" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                    </div>
+                    <div class="absolute -bottom-3.5 left-1/2 -translate-x-1/2 bg-slate-950 dark:bg-amber-400 text-amber-300 dark:text-slate-950 text-xs font-black px-5 py-1.5 rounded-full whitespace-nowrap shadow-xl border border-amber-300/50 uppercase tracking-wider">
+                        <i class="fa-solid fa-seedling mr-1.5 text-amber-400 dark:text-slate-950"></i> স্বপ্নদ্রষ্টা ও প্রতিষ্ঠাতা
+                    </div>
+                </div>
+
+                <!-- Founder Profile Overview -->
+                <div class="flex-1 text-center lg:text-left space-y-4">
+                    <div class="inline-flex items-center px-4 py-1.5 rounded-full bg-amber-100 dark:bg-amber-950/70 text-amber-900 dark:text-amber-300 text-xs font-black uppercase tracking-wider border border-amber-300 dark:border-amber-800">
+                        <i class="fa-solid fa-monument mr-2"></i> প্রতিষ্ঠাতা মহোদয়ের পূর্ণাঙ্গ প্রোফাইল
+                    </div>
+                    
+                    <h1 class="text-3xl sm:text-5xl font-black text-slate-900 dark:text-white" x-text="data.site.founder?.name || 'মরহুম আলহাজ্ব সিরাজুল ইসলাম'"></h1>
+                    
+                    <p class="text-sm sm:text-base font-bold text-amber-700 dark:text-amber-400" x-text="data.site.founder?.designation || 'প্রতিষ্ঠাতা — আসহাব সিরাজ পলিটেকনিক ইনস্টিটিউট ও আসহাব সিরাজ ফাউন্ডেশন'"></p>
+                    
+                    <div class="inline-block text-xs font-black text-slate-600 dark:text-slate-300 bg-amber-500/10 dark:bg-slate-800 px-4 py-1.5 rounded-xl border border-amber-200 dark:border-slate-700">
+                        <i class="fa-regular fa-calendar-days mr-1.5 text-amber-600 dark:text-amber-400"></i> জীবনকাল: <span x-text="data.site.founder?.lifespan || '৩০ জানুয়ারি ১৯৫৮ – ২৭ এপ্রিল ২০২১'"></span>
+                    </div>
+
+                    <!-- Founder Inspiring Quote Banner -->
+                    <div class="p-5 rounded-2xl bg-amber-500/10 dark:bg-amber-400/10 border-l-4 border-amber-500 dark:border-amber-400 text-slate-800 dark:text-slate-200 italic text-sm sm:text-base font-semibold leading-relaxed shadow-sm">
+                        <i class="fa-solid fa-quote-left mr-2 text-amber-500 dark:text-amber-400"></i>
+                        <span x-text="data.site.founder?.quote || 'সৎ জীবনযাপন, নৈতিকতা ও কর্মমুখী শিক্ষার আলো ছড়িয়ে প্রতিটি সন্তানকে দক্ষ ও আত্মনির্ভরশীল মানবসম্পদ হিসেবে গড়ে তোলাই আমাদের আজীবন লক্ষ্য।'"></span>
+                    </div>
+
+                    <!-- Introduction Paragraph -->
+                    <p class="text-sm sm:text-base text-slate-600 dark:text-slate-300 font-medium leading-relaxed" x-text="data.site.founder?.intro || 'মরহুম আলহাজ্ব সিরাজুল ইসলাম ছিলেন একজন নীতিবান, দূরদর্শী ও মানবিক ব্যক্তিত্ব, যিনি সৎ জীবনযাপন, সমাজসেবা ও জনকল্যাণমূলক কর্মকাণ্ডের মাধ্যমে মানুষের হৃদয়ে স্থায়ী স্থান করে নিয়েছেন।'"></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed Biography Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            
+            <!-- 1. Personal Information & Birth Details -->
+            <div class="glass-card rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-200 dark:border-slate-700 space-y-4">
+                <div class="flex items-center space-x-3 text-amber-700 dark:text-amber-400 font-black text-lg border-b border-slate-100 dark:border-slate-700/80 pb-3">
+                    <div class="w-10 h-10 rounded-xl bg-amber-100 dark:bg-slate-800 flex items-center justify-center text-amber-600 dark:text-amber-400 text-xl"><i class="fa-solid fa-id-card-clip"></i></div>
+                    <h3>ব্যক্তিগত তথ্য ও জন্মবৃত্তান্ত</h3>
+                </div>
+                
+                <div class="space-y-3 text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300">
+                    <div class="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl">
+                        <span class="text-slate-500 dark:text-slate-400">পিতার নাম:</span>
+                        <strong class="text-slate-900 dark:text-white" x-text="data.site.founder?.personal_info?.father || 'মরহুম আলহাজ্ব আসহাব মিয়া'"></strong>
+                    </div>
+                    <div class="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl">
+                        <span class="text-slate-500 dark:text-slate-400">মাতার নাম:</span>
+                        <strong class="text-slate-900 dark:text-white" x-text="data.site.founder?.personal_info?.mother || 'আলহাজ্ব মেহেরুন্নেসা কুসুমবালা'"></strong>
+                    </div>
+                    <div class="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl">
+                        <span class="text-slate-500 dark:text-slate-400">জন্ম তারিখ:</span>
+                        <strong class="text-slate-900 dark:text-white" x-text="data.site.founder?.personal_info?.birth_date || '৩০ জানুয়ারি ১৯৫৮'"></strong>
+                    </div>
+                    <div class="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl">
+                        <span class="text-slate-500 dark:text-slate-400">মৃত্যু তারিখ:</span>
+                        <strong class="text-slate-900 dark:text-white" x-text="data.site.founder?.personal_info?.death_date || '২৭ এপ্রিল ২০২১'"></strong>
+                    </div>
+                    <div class="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl">
+                        <span class="text-slate-500 dark:text-slate-400">জন্ম ও আদি নিবাস:</span>
+                        <strong class="text-slate-900 dark:text-white" x-text="data.site.founder?.personal_info?.birth_place || 'জামিরজুরী, দোহাজারী পৌরসভা, চট্টগ্রাম'"></strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Educational Achievements -->
+            <div class="glass-card rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-200 dark:border-slate-700 space-y-4">
+                <div class="flex items-center space-x-3 text-indigo-700 dark:text-indigo-400 font-black text-lg border-b border-slate-100 dark:border-slate-700/80 pb-3">
+                    <div class="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-slate-800 flex items-center justify-center text-indigo-600 dark:text-indigo-400 text-xl"><i class="fa-solid fa-graduation-cap"></i></div>
+                    <h3>শিক্ষাগত যোগ্যতা ও মেধাভিত্তিক কৃতিত্ব</h3>
+                </div>
+                
+                <ul class="space-y-3">
+                    <template x-for="(edu, i) in (data.site.founder?.education || [
+                        '১৯৭৩: দোহাজারী জামিরজুরী আ. রহমান উচ্চ বিদ্যালয়, মানবিক বিভাগে দ্বিতীয় স্থান',
+                        '১৯৭৫: গাছবাড়ীয়া মহাবিদ্যালয়, মানবিক বিভাগে তৃতীয় স্থান',
+                        '১৯৭৮: বিএ (ইসলামিক ইতিহাস), চট্টগ্রাম বিশ্ববিদ্যালয়, দ্বিতীয় বিভাগ',
+                        'এমএ (ইসলামের ইতিহাস ও সংস্কৃতি), চট্টগ্রাম বিশ্ববিদ্যালয়, দ্বিতীয় বিভাগ'
+                    ])" :key="i">
+                        <li class="flex items-start p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300">
+                            <span class="w-6 h-6 rounded-lg bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 flex items-center justify-center font-black text-xs mr-3 shrink-0" x-text="i + 1"></span>
+                            <span x-text="edu"></span>
+                        </li>
+                    </template>
+                </ul>
+            </div>
+
+            <!-- 3. Business Career & Enterprise Legacy (Full Width) -->
+            <div class="glass-card rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-200 dark:border-slate-700 space-y-4 md:col-span-2">
+                <div class="flex items-center space-x-3 text-emerald-700 dark:text-emerald-400 font-black text-lg border-b border-slate-100 dark:border-slate-700/80 pb-3">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-slate-800 flex items-center justify-center text-emerald-600 dark:text-emerald-400 text-xl"><i class="fa-solid fa-briefcase"></i></div>
+                    <h3>কর্মজীবন ও প্রতিষ্ঠিত ব্যবসায়িক প্রতিষ্ঠানসমূহ</h3>
+                </div>
+
+                <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 font-semibold leading-relaxed">
+                    শিক্ষাজীবন সমাপ্তির পর তিনি অত্যন্ত সততা, নিষ্ঠা ও দূরদর্শিতার সাথে কর্মজীবনে প্রবেশ করেন এবং দেশের শীর্ষস্থানীয় বিভিন্ন শিল্প ও বাণিজ্য খাতে অসামান্য অবদান রাখেন। তিনি বহু সফল ব্যবসা প্রতিষ্ঠান ও জনকল্যাণমূলক উদ্যোগ প্রতিষ্ঠা করেন:
+                </p>
+
+                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 pt-2">
+                    <template x-for="(corp, idx) in (data.site.founder?.enterprises || [
+                        'টোটাল শিপিং', 'সাইগন এন্টারপ্রাইজ', 'আফনান এন্টারপ্রাইজ', 'ওরিয়েন্টাল এজেন্টস লিঃ',
+                        'সালুটিকর এসোসিয়েটস', 'রাজু এন্টারপ্রাইজ', 'টোটাল ফিসিং', 'আমির এন্ড সন্স লিঃ',
+                        'বিটু রেস্টুরেন্ট', 'বাগান এন্টারপ্রাইজ', 'সেইফ এন্ড সাউন্ড শিপিং', 'সেইফ এন্ড সাউন্ড ইন্সপেকশন',
+                        'আসহাব সিরাজ ফাউন্ডেশন', 'আসহাব সিরাজ পলিটেকনিক ইনস্টিটিউট'
+                    ])" :key="idx">
+                        <div class="p-3.5 bg-gradient-to-br from-slate-50 to-emerald-50/30 dark:from-slate-800/80 dark:to-emerald-950/20 border border-slate-200 dark:border-slate-700 rounded-2xl flex items-center space-x-2.5 shadow-sm hover:-translate-y-1 transition-transform">
+                            <i class="fa-solid fa-circle-check text-emerald-500 text-xs shrink-0"></i>
+                            <span class="text-xs font-bold text-slate-800 dark:text-slate-200" x-text="corp"></span>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <!-- 4. Social & Humanitarian Legacy -->
+            <div class="glass-card rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-200 dark:border-slate-700 space-y-4">
+                <div class="flex items-center space-x-3 text-purple-700 dark:text-purple-400 font-black text-lg border-b border-slate-100 dark:border-slate-700/80 pb-3">
+                    <div class="w-10 h-10 rounded-xl bg-purple-100 dark:bg-slate-800 flex items-center justify-center text-purple-600 dark:text-purple-400 text-xl"><i class="fa-solid fa-hand-holding-heart"></i></div>
+                    <h3>সমাজসেবা ও মানবিক অবদান</h3>
+                </div>
+
+                <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 font-medium leading-relaxed" x-text="data.site.founder?.social_work || 'তিনি ছিলেন ধর্মীয় ও মানবিক কাজের নিরলস কর্মী। মসজিদ, মাদ্রাসা, এতিমখানা, ও অন্যান্য জনকল্যাণমূলক প্রতিষ্ঠানের উন্নয়নে তাঁর অবদান আজও শ্রদ্ধার সঙ্গে স্মরণ করা হয়।'"></p>
+                <div class="p-4 bg-purple-50 dark:bg-purple-950/40 rounded-2xl border border-purple-200 dark:border-purple-800/60 text-xs font-semibold text-purple-900 dark:text-purple-300">
+                    <i class="fa-solid fa-heart mr-2 text-purple-600 dark:text-purple-400"></i> অবহেলিত ও গ্রামীণ জনগোষ্ঠীর সার্বিক কল্যাণে তিনি আজীবন মানবসেবায় নিবেদিতপ্রাণ ছিলেন।
+                </div>
+            </div>
+
+            <!-- 5. Family Life & Successors -->
+            <div class="glass-card rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-200 dark:border-slate-700 space-y-4">
+                <div class="flex items-center space-x-3 text-blue-700 dark:text-blue-400 font-black text-lg border-b border-slate-100 dark:border-slate-700/80 pb-3">
+                    <div class="w-10 h-10 rounded-xl bg-blue-100 dark:bg-slate-800 flex items-center justify-center text-blue-600 dark:text-blue-400 text-xl"><i class="fa-solid fa-people-roof"></i></div>
+                    <h3>পারিবারিক জীবন ও উত্তরসূরি</h3>
+                </div>
+
+                <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 font-medium leading-relaxed" x-text="data.site.founder?.family || 'তিনি ছিলেন এক সুখী ও সম্মানিত পরিবারের কর্তা। স্ত্রী বেগম রাজিয়া সোলতানা এবং সন্তানাদি—জনাব আফনান ইসলাম, জনাবা সাবরিনা সুরভি আসফি, ও জনাব নাফিস হাসান ইসলাম—বর্তমানে তাঁর আদর্শ ও মূল্যবোধ অনুসরণ করে বিভিন্ন ক্ষেত্রে সফলতার সঙ্গে এগিয়ে চলেছেন।'"></p>
+                <div class="p-4 bg-blue-50 dark:bg-blue-950/40 rounded-2xl border border-blue-200 dark:border-blue-800/60 text-xs font-semibold text-blue-900 dark:text-blue-300">
+                    <i class="fa-solid fa-users mr-2 text-blue-600 dark:text-blue-400"></i> প্রতিষ্ঠাতা মহোদয়ের মহৎ স্বপ্ন ও আদর্শকে সমুন্নত রেখে আসহাব সিরাজ ফাউন্ডেশন পরিচালিত হচ্ছে।
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Back to Home Action Bar -->
+        <div class="glass-card rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-200 dark:border-slate-700 text-center space-y-4 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white">
+            <h3 class="text-xl sm:text-2xl font-black text-yellow-400">দক্ষ কারিগরি জনশক্তি গঠনে আমাদের অঙ্গীকার</h3>
+            <p class="text-xs sm:text-sm text-slate-300 max-w-xl mx-auto font-semibold">আসহাব সিরাজ পলিটেকনিক ইনস্টিটিউটে ভর্তির মাধ্যমে আপনার প্রকৌশল ও প্রযুক্তি শিক্ষার ভবিষ্যৎ গড়ুন।</p>
+            <div class="flex flex-wrap justify-center gap-4 pt-2">
+                <a href="index.html" class="px-6 py-3 bg-white hover:bg-slate-100 text-slate-900 font-black rounded-xl text-xs sm:text-sm shadow-md transition-transform hover:scale-105">
+                    <i class="fa-solid fa-house mr-2"></i> হোমপেজে যান
+                </a>
+                <a href="index.html#admission" class="px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:opacity-95 text-white font-black rounded-xl text-xs sm:text-sm shadow-md transition-transform hover:scale-105">
+                    <i class="fa-solid fa-paper-plane mr-2"></i> ভর্তি আবেদন করুন
+                </a>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer (Identical to Homepage) -->
+    <footer class="mt-20 glass-card border-x-0 border-b-0 rounded-t-[2.5rem] sm:rounded-t-[3.5rem] pt-14 pb-8 relative overflow-hidden">
+        <div class="container mx-auto px-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div>
+                <div class="flex items-center space-x-3 mb-4">
+                    <div class="w-12 h-12 rounded-2xl bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 flex items-center justify-center shadow-md overflow-hidden shrink-0">
+                        <img :src="data.site.logo || 'assets/uploads/1787121756078_5353.png'" 
+                             @error="$el.src = $el.src.includes('ASPI-Logo.png') ? '' : 'assets/uploads/ASPI-Logo.png'" 
+                             class="w-full h-full object-contain p-1" 
+                             alt="ASPI Logo">
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-black text-slate-900 dark:text-white leading-tight">ASPI</h3>
+                        <p class="text-[10px] font-bold text-slate-500">আসহাব সিরাজ পলিটেকনিক</p>
+                    </div>
+                </div>
+                <p class="text-xs font-semibold text-slate-600 dark:text-slate-400 mb-5 leading-relaxed">
+                    কারিগরি শিক্ষায় শিক্ষিত জাতিই পারে দেশের প্রকৃত উন্নয়ন সাধন করতে। আধুনিক প্রযুক্তিনির্ভর শিক্ষায় আমরা বদ্ধপরিকর।
+                </p>
+                
+                <div class="flex flex-wrap gap-2">
+                    <a x-show="data.site.whatsapp" :href="getWhatsAppUrl(data.site.whatsapp)" target="_blank" class="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center hover:opacity-90 transition-opacity text-sm shadow-sm" title="WhatsApp">
+                        <i class="fa-brands fa-whatsapp"></i>
+                    </a>
+                    <a x-show="data.site.instagram" :href="data.site.instagram" target="_blank" class="w-9 h-9 rounded-xl bg-gradient-to-tr from-yellow-500 via-pink-600 to-purple-600 text-white flex items-center justify-center hover:opacity-90 transition-opacity text-sm shadow-sm" title="Instagram">
+                        <i class="fa-brands fa-instagram"></i>
+                    </a>
+                    <a x-show="data.site.facebook" :href="data.site.facebook" target="_blank" class="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center hover:opacity-90 transition-opacity text-sm shadow-sm" title="Facebook">
+                        <i class="fa-brands fa-facebook-f"></i>
+                    </a>
+                    <a x-show="data.site.youtube" :href="data.site.youtube" target="_blank" class="w-9 h-9 rounded-xl bg-red-600 text-white flex items-center justify-center hover:opacity-90 transition-opacity text-sm shadow-sm" title="YouTube">
+                        <i class="fa-brands fa-youtube"></i>
+                    </a>
+                </div>
+            </div>
+            
+            <div>
+                <h4 class="text-base font-black text-slate-900 dark:text-white mb-4 border-b border-slate-200 dark:border-slate-700 pb-2 inline-block">কোর্স ও বিভাগসমূহ</h4>
+                <ul class="space-y-2 text-xs font-bold text-slate-600 dark:text-slate-400">
+                    <template x-for="course in data.courses.slice(0, 5)" :key="course.id">
+                        <li class="flex items-center"><i class="fa-solid fa-angle-right text-indigo-500 mr-2"></i> <span x-text="course.title"></span></li>
+                    </template>
+                </ul>
+            </div>
+
+            <div>
+                <h4 class="text-base font-black text-slate-900 dark:text-white mb-4 border-b border-slate-200 dark:border-slate-700 pb-2 inline-block">গুরুত্বপূর্ণ লিংক</h4>
+                <ul class="space-y-2.5 text-xs font-bold text-slate-600 dark:text-slate-400">
+                    <li><a href="https://bteb.gov.bd/" target="_blank" class="hover:text-indigo-600 dark:hover:text-brand-gold flex items-center"><i class="fa-solid fa-link text-indigo-500 mr-2"></i> বাংলাদেশ কারিগরি শিক্ষা বোর্ড</a></li>
+                    <li><a href="https://nsda.gov.bd/" target="_blank" class="hover:text-indigo-600 dark:hover:text-brand-gold flex items-center"><i class="fa-solid fa-link text-indigo-500 mr-2"></i> জাতীয় দক্ষতা উন্নয়ন কর্তৃপক্ষ (NSDA)</a></li>
+                    <li><a href="index.html#admission" class="hover:text-indigo-600 dark:hover:text-brand-gold flex items-center"><i class="fa-solid fa-link text-indigo-500 mr-2"></i> অনলাইনে ভর্তি আবেদন</a></li>
+                    <li><a href="/admin/" target="_blank" class="hover:text-indigo-600 dark:hover:text-brand-gold flex items-center"><i class="fa-solid fa-lock text-indigo-500 mr-2"></i> ইনস্টিটিউট ড্যাশবোর্ড</a></li>
+                </ul>
+            </div>
+
+            <div>
+                <h4 class="text-base font-black text-slate-900 dark:text-white mb-4 border-b border-slate-200 dark:border-slate-700 pb-2 inline-block">যোগাযোগ</h4>
+                <ul class="space-y-3 text-xs font-semibold text-slate-600 dark:text-slate-400">
+                    <li class="flex items-start"><i class="fa-solid fa-location-dot mt-0.5 text-indigo-500 mr-2.5 text-sm"></i><span x-text="data.site.address || 'দক্ষিণ হাশিমপুর, দোহাজারী, চন্দনাইশ, চট্টগ্রাম'"></span></li>
+                    <li class="flex items-center"><i class="fa-solid fa-phone text-indigo-500 mr-2.5 text-sm"></i><span x-text="data.site.phone || '+৮৮০ ১৮৪৭-৩১০৩১০'"></span></li>
+                    <li class="flex items-center"><i class="fa-solid fa-envelope text-indigo-500 mr-2.5 text-sm"></i><span x-text="data.site.email || 'ctgaspi@gmail.com'"></span></li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Copyright & Foundation Institutional Trust Showcase -->
+        <div class="mt-12 pt-8 border-t border-slate-200/80 dark:border-slate-800/90 text-center space-y-6">
+            <!-- Prestige Foundation Institutional Banner -->
+            <div class="max-w-2xl mx-auto px-4">
+                <div class="relative overflow-hidden rounded-3xl p-[1px] bg-gradient-to-r from-amber-400/40 via-indigo-500/40 to-amber-400/40 dark:from-brand-gold/50 dark:via-indigo-500/30 dark:to-yellow-500/50 shadow-xl group">
+                    <div class="relative rounded-[23px] bg-gradient-to-b from-white via-slate-50 to-amber-50/30 dark:from-slate-900 dark:via-slate-900/95 dark:to-slate-950 p-5 sm:p-6 backdrop-blur-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+                        
+                        <!-- Left: Foundation Crest & Name -->
+                        <div class="flex items-center space-x-4 text-left">
+                            <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500 to-yellow-600 dark:from-brand-gold dark:to-amber-600 flex items-center justify-center text-slate-950 text-xl shadow-lg shadow-amber-500/20 shrink-0 ring-4 ring-amber-400/20">
+                                <i class="fa-solid fa-shield-halved"></i>
+                            </div>
+                            <div>
+                                <span class="inline-flex items-center text-[10px] font-black uppercase tracking-widest text-amber-700 dark:text-brand-gold bg-amber-100 dark:bg-amber-950/60 px-2 py-0.5 rounded-md border border-amber-300 dark:border-amber-700/60 mb-1">
+                                    <i class="fa-solid fa-certificate mr-1 text-[9px]"></i> পরিচালনা ও পৃষ্ঠপোষকতা
+                                </span>
+                                <h4 class="text-base sm:text-lg font-black text-slate-900 dark:text-white leading-tight flex items-center">
+                                    <span x-text="data.site.foundation_name || 'আসহাব সিরাজ ফাউন্ডেশন'"></span>
+                                </h4>
+                                <p class="text-[11px] font-bold text-slate-500 dark:text-slate-400">একটি অরাজনৈতিক, সমাজকল্যাণমূলক ও কারিগরি শিক্ষানুরাগী ট্রাস্ট</p>
+                            </div>
+                        </div>
+
+                        <!-- Right: Back to Home Link Button -->
+                        <a href="index.html" class="inline-flex items-center justify-center space-x-2 px-4 py-2.5 rounded-2xl bg-slate-900 hover:bg-black dark:bg-amber-500 dark:hover:bg-amber-400 text-white dark:text-slate-950 text-xs font-black shadow-md transition-all hover:scale-105 active:scale-95 shrink-0">
+                            <i class="fa-solid fa-house text-amber-400 dark:text-slate-950"></i>
+                            <span>ইনস্টিটিউট মূল ওয়েবসাইট</span>
+                            <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Standard Copyright Notice & Made With Credit (Clean Centered Text) -->
+            <div class="text-xs font-semibold text-slate-500 dark:text-slate-400 text-center space-y-1.5 pt-3">
+                <p>&copy; ২০২৬ আসহাব সিরাজ পলিটেকনিক ইনস্টিটিউট (ASPI)। সর্বস্বত্ব সংরক্ষিত।</p>
+                <p class="text-[11px] font-medium">
+                    Made With <i class="fa-solid fa-heart text-red-500 inline-block mx-0.5 animate-pulse"></i> by 
+                    <a href="https://fb.com/MrSaifBN" target="_blank" rel="noopener noreferrer" class="text-indigo-600 dark:text-amber-400 hover:text-indigo-700 dark:hover:text-amber-300 font-bold hover:underline transition-colors">
+                        MrSaifBN
+                    </a>
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Alpine App Logic -->
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('founderApp', () => ({
+                liveDate: '',
+                liveBanglaDate: '',
+                liveHijriDate: '',
+                liveTime: '',
+                themeMode: 'auto',
+                darkMode: false,
+                logoError: false,
+                mobileMenuOpen: false,
+                data: { 
+                    site: { 
+                        slogan: 'একটাই লক্ষ্য, হতে হবে দক্ষ।',
+                        foundation_name: 'আসহাব সিরাজ ফাউন্ডেশন',
+                        font_size: '16', 
+                        custom_font: '', 
+                        whatsapp: '+8801847310310',
+                        instagram: 'https://instagram.com/aspi_polytechnic',
+                        facebook: 'https://facebook.com/aspictg',
+                        youtube: 'https://youtube.com',
+                        founder: {},
+                        sections: {} 
+                    }, 
+                    courses: [] 
+                },
+
+                getWhatsAppUrl(rawPhone) {
+                    if (!rawPhone) return '#';
+                    const digits = rawPhone.replace(/\D/g, '');
+                    return `https://wa.me/${digits}?text=${encodeURIComponent('আসহাব সিরাজ পলিটেকনিক ইনস্টিটিউটে ভর্তি তথ্য জানতে চাই।')}`;
+                },
+                
+                init() {
+                    this.initTheme();
+                    this.updateLiveClock();
+                    setInterval(() => this.updateLiveClock(), 1000);
+                    this.fetchData();
+                },
+
+                updateLiveClock() {
+                    const bnDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+                    const toBn = (num) => String(num).replace(/\d/g, d => bnDigits[d]);
+                    const days = ['রবিবার', 'সোমবার', 'মঙ্গলবার', 'বুধবার', 'বৃহস্পতিবার', 'শুক্রবার', 'শনিবার'];
+                    const months = ['জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'];
+                    
+                    const now = new Date();
+                    const dayName = days[now.getDay()];
+                    const dateNum = toBn(now.getDate());
+                    const monthName = months[now.getMonth()];
+                    const yearNum = toBn(now.getFullYear());
+                    
+                    this.liveDate = `${dayName}, ${dateNum} ${monthName} ${yearNum}`;
+                    
+                    // --- Bengali Solar Calendar (Revised Bangla Academy) ---
+                    const bnMonths = ['বৈশাখ', 'জ্যৈষ্ঠ', 'আষাঢ়', 'শ্রাবণ', 'ভাদ্র', 'আশ্বিন', 'কার্তিক', 'অগ্রহায়ণ', 'পৌষ', 'মাঘ', 'ফাল্গুন', 'চৈত্র'];
+                    const year = now.getFullYear();
+                    const month = now.getMonth();
+                    const day = now.getDate();
+                    const isLeap = (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);
+                    const monthDays = [31, isLeap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+                    let dayOfYear = day;
+                    for (let i = 0; i < month; i++) dayOfYear += monthDays[i];
+                    
+                    const april14Day = isLeap ? 105 : 104;
+                    let bYear = year - 593;
+                    let bMonthIdx = 0;
+                    let bDay = 1;
+                    
+                    if (dayOfYear >= april14Day) {
+                        let diff = dayOfYear - april14Day;
+                        const bdMonthDays = [31, 31, 31, 31, 31, 30, 30, 30, 30, 30, isLeap ? 31 : 30, 30];
+                        for (let i = 0; i < 12; i++) {
+                            if (diff < bdMonthDays[i]) {
+                                bMonthIdx = i;
+                                bDay = diff + 1;
+                                break;
+                            }
+                            diff -= bdMonthDays[i];
+                        }
+                    } else {
+                        bYear = year - 594;
+                        let diff = dayOfYear + 15;
+                        const bdMonthDaysFromPoush = [30, 30, isLeap ? 31 : 30, 30];
+                        const mIndices = [8, 9, 10, 11];
+                        for (let i = 0; i < 4; i++) {
+                            if (diff < bdMonthDaysFromPoush[i]) {
+                                bMonthIdx = mIndices[i];
+                                bDay = diff + 1;
+                                break;
+                            }
+                            diff -= bdMonthDaysFromPoush[i];
+                        }
+                    }
+                    this.liveBanglaDate = `${toBn(bDay)} ${bnMonths[bMonthIdx]} ${toBn(bYear)} বঙ্গাব্দ`;
+                    
+                    // --- Hijri Islamic Calendar ---
+                    const hijriMonthsBn = [
+                        'মুহাররম', 'সফর', 'রবিউল আউয়াল', 'রবিউস সানি',
+                        'জমাদিউল আউয়াল', 'জমাদিউস সানি', 'রজব', 'শাবান',
+                        'রমজান', 'শাওয়াল', 'জিলকদ', 'জিলহজ্জ'
+                    ];
+                    try {
+                        const hFormatter = new Intl.DateTimeFormat('en-u-ca-islamic-umalqura', {
+                            day: 'numeric',
+                            month: 'numeric',
+                            year: 'numeric'
+                        });
+                        const parts = hFormatter.formatToParts(now);
+                        let hDay = 1, hMonth = 1, hYear = 1448;
+                        for (const p of parts) {
+                            if (p.type === 'day') hDay = parseInt(p.value, 10);
+                            if (p.type === 'month') hMonth = parseInt(p.value, 10);
+                            if (p.type === 'year') hYear = parseInt(p.value, 10);
+                        }
+                        const hMonthName = hijriMonthsBn[(hMonth - 1) % 12] || 'হিজরি';
+                        this.liveHijriDate = `${toBn(hDay)} ${hMonthName} ${toBn(hYear)} হিজরি`;
+                    } catch (e) {
+                        this.liveHijriDate = '';
+                    }
+
+                    // --- Live Time (12-hour AM/PM) ---
+                    let hours = now.getHours();
+                    const minutes = String(now.getMinutes()).padStart(2, '0');
+                    const seconds = String(now.getSeconds()).padStart(2, '0');
+                    const ampm = hours >= 12 ? 'অপরাহ্ন' : 'পূর্বাহ্ন';
+                    hours = hours % 12 || 12;
+                    const hoursStr = String(hours).padStart(2, '0');
+                    
+                    this.liveTime = `${toBn(hoursStr)}:${toBn(minutes)}:${toBn(seconds)} ${ampm}`;
+                },
+
+                initTheme() {
+                    const savedPref = localStorage.getItem('aspi_theme_mode') || 'auto';
+                    this.themeMode = savedPref;
+                    const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                    
+                    if (this.themeMode === 'dark') {
+                        this.darkMode = true;
+                    } else if (this.themeMode === 'light') {
+                        this.darkMode = false;
+                    } else {
+                        this.darkMode = systemDark;
+                    }
+                    this.applyThemeClass();
+
+                    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+                    const handleMediaChange = (e) => {
+                        if (this.themeMode === 'auto') {
+                            this.darkMode = e.matches;
+                            this.applyThemeClass();
+                        }
+                    };
+                    try {
+                        mediaQuery.addEventListener('change', handleMediaChange);
+                    } catch (e) {
+                        mediaQuery.addListener(handleMediaChange);
+                    }
+                },
+
+                toggleTheme() {
+                    if (this.darkMode) {
+                        this.darkMode = false;
+                        this.themeMode = 'light';
+                    } else {
+                        this.darkMode = true;
+                        this.themeMode = 'dark';
+                    }
+                    localStorage.setItem('aspi_theme_mode', this.themeMode);
+                    this.applyThemeClass();
+                },
+
+                applyThemeClass() {
+                    if (this.darkMode) {
+                        document.documentElement.classList.add('dark');
+                    } else {
+                        document.documentElement.classList.remove('dark');
+                    }
+                },
+
+                async fetchData() {
+                    try {
+                        let res = await fetch('api.php?t=' + Date.now(), { cache: 'no-store' });
+                        let jsonData = await res.json();
+                        if(!jsonData.error) { 
+                            this.data = jsonData; 
+                        }
+                    } catch (err) { console.error("Error loading data", err); }
+                }
+            }))
+        });
+    </script>
+</body>
+</html>

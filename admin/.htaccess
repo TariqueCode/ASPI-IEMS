@@ -1,0 +1,15 @@
+# ==============================================================================
+# Apache Configuration for ASPI Admin Dashboard
+# ==============================================================================
+
+DirectoryIndex index.html index.php
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /admin/
+</IfModule>
+
+# Allow browser caching of static scripts
+<IfModule mod_headers.c>
+    Header set Access-Control-Allow-Origin "*"
+</IfModule>
