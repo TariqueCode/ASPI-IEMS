@@ -1,43 +1,64 @@
 <?php
 /**
  * EducationBoardResult Engine
- * Handles official session, cookies and live scraping from:
- * 1. https://eboardresults.com
- * 2. https://www.educationboardresults.gov.bd
+ *
+ * Proxies the official Bangladesh Education Board result/captcha endpoints
+ * through the institute server so the browser never needs to call the
+ * government domain directly (avoids browser CORS/Cookie restrictions).
+ *
+ * Important: captcha and verification MUST use the same server-side session.
  */
 
 class EducationBoardResult {
-    private $cookieFile;
+    private $cookieDir;
+    private $activeBaseUrl = null;
+
+    /**
+     * Keep the official providers separate. A captcha issued by one provider
+     * must never be submitted to another provider with a different session.
+     */
     private $baseUrls = [
         'https://eboardresults.com',
         'https://www.educationboardresults.gov.bd'
     ];
-    private $activeBaseUrl = 'https://eboardresults.com';
 
     public function __construct($cookiePath = null) {
-        if ($cookiePath) {
-            $this->cookieFile = $cookiePath;
-        } else {
-            $cookieDir = __DIR__ . '/cookies';
-            if (!is_dir($cookieDir)) {
-                @mkdir($cookieDir, 0777, true);
-            }
-            $this->cookieFile = $cookieDir . '/edu_board_cookies.txt';
+        $this->cookieDir = __DIR__ . '/cookies';
+
+        if (!is_dir($this->cookieDir)) {
+            @mkdir($this->cookieDir, 0700, true);
         }
 
-        if (!file_exists($this->cookieFile)) {
-            @touch($this->cookieFile);
-            @chmod($this->cookieFile, 0666);
+        // Backward compatibility with the old constructor argument.
+        // A directory is used internally; each provider gets its own cookie jar.
+        if ($cookiePath) {
+            $dir = dirname($cookiePath);
+            if (is_dir($dir) || @mkdir($dir, 0700, true)) {
+                $this->cookieDir = $dir;
+            }
         }
+    }
+
+    private function cookieFile($baseUrl) {
+        $host = parse_url($baseUrl, PHP_URL_HOST) ?: 'default';
+        $safeHost = preg_replace('/[^a-z0-9._-]+/i', '_', $host);
+        return rtrim($this->cookieDir, '/\\') . '/edu_board_' . $safeHost . '.txt';
+    }
+
+    private function resetCookieFile($baseUrl) {
+        $file = $this->cookieFile($baseUrl);
+        if (file_exists($file)) {
+            @unlink($file);
+        }
+        @touch($file);
+        @chmod($file, 0600);
+        return $file;
     }
 
     private function getHeaders($referer, $isAjax = false) {
         $headers = [
             'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-            'Accept-Language: en-US,en;q=0.9,bn;q=0.8',
-            'sec-ch-ua: "Chromium";v="124", "Google Chrome";v="124", "Not-A.Brand";v="99"',
-            'sec-ch-ua-mobile: ?0',
-            'sec-ch-ua-platform: "Windows"',
+            'Accept-Language: bn-BD,bn;q=0.9,en-US;q=0.8,en;q=0.7',
             'Referer: ' . $referer
         ];
 
@@ -52,86 +73,132 @@ class EducationBoardResult {
         return $headers;
     }
 
+    private function isValidCaptchaPayload($data, $contentType) {
+        if (!is_string($data) || strlen($data) < 30) {
+            return false;
+        }
+
+        $contentType = strtolower((string)$contentType);
+        if (strpos($contentType, 'image/') !== false) {
+            return true;
+        }
+
+        // Some upstream servers omit/misreport Content-Type. Detect common
+        // image signatures so HTML error pages are never returned as captcha.
+        $prefix = substr($data, 0, 16);
+        return substr($prefix, 0, 8) === "\x89PNG\r\n\x1a\n"
+            || substr($prefix, 0, 3) === "\xFF\xD8\xFF"
+            || strpos($prefix, 'GIF8') === 0
+            || strpos($prefix, '<svg') !== false;
+    }
+
+    private function request($url, $options = []) {
+        $ch = curl_init($url);
+        curl_setopt_array($ch, $options + [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_MAXREDIRS => 4,
+            CURLOPT_SSL_VERIFYPEER => true,
+            CURLOPT_SSL_VERIFYHOST => 2,
+            CURLOPT_ENCODING => '',
+            CURLOPT_CONNECTTIMEOUT => 10,
+            CURLOPT_TIMEOUT => 20,
+        ]);
+
+        $body = curl_exec($ch);
+        $info = curl_getinfo($ch);
+        $error = curl_error($ch);
+        curl_close($ch);
+
+        return [
+            'body' => $body,
+            'http' => (int)($info['http_code'] ?? 0),
+            'content_type' => (string)($info['content_type'] ?? ''),
+            'error' => $error
+        ];
+    }
+
+    private function initProviderSession($baseUrl) {
+        $cookieFile = $this->resetCookieFile($baseUrl);
+        $homeUrl = $baseUrl . '/v2/home';
+
+        $res = $this->request($homeUrl, [
+            CURLOPT_COOKIEJAR => $cookieFile,
+            CURLOPT_COOKIEFILE => $cookieFile,
+            CURLOPT_HTTPHEADER => $this->getHeaders($homeUrl)
+        ]);
+
+        if ($res['error'] || $res['http'] < 200 || $res['http'] >= 400) {
+            return [
+                'ok' => false,
+                'cookie' => $cookieFile,
+                'message' => $res['error'] ?: "HTTP {$res['http']} from {$baseUrl}/v2/home"
+            ];
+        }
+
+        $this->activeBaseUrl = $baseUrl;
+        return [
+            'ok' => true,
+            'cookie' => $cookieFile
+        ];
+    }
+
     public function getCaptcha() {
         if (!function_exists('curl_init')) {
             return [
                 'status' => 'error',
-                'message' => 'PHP cURL Extension is not enabled on this server. অনুগ্রহ করে cPanel থেকে PHP curl extension এনাবল করুন।'
+                'message' => 'PHP cURL Extension is not enabled on this server. cPanel থেকে PHP cURL extension চালু করুন।'
             ];
         }
 
-        $lastError = '';
+        $errors = [];
 
         foreach ($this->baseUrls as $baseUrl) {
-            // Clear existing cookies for a fresh session
-            if (file_exists($this->cookieFile)) {
-                @file_put_contents($this->cookieFile, '');
+            $session = $this->initProviderSession($baseUrl);
+            if (!$session['ok']) {
+                $errors[] = $session['message'];
+                continue;
             }
 
-            // 1. Initialize session on home page
-            $ch = curl_init("{$baseUrl}/v2/home");
-            curl_setopt_array($ch, [
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_FOLLOWLOCATION => true,
-                CURLOPT_SSL_VERIFYPEER => false,
-                CURLOPT_SSL_VERIFYHOST => false,
-                CURLOPT_COOKIEJAR => $this->cookieFile,
-                CURLOPT_COOKIEFILE => $this->cookieFile,
-                CURLOPT_TIMEOUT => 12,
-                CURLOPT_CONNECTTIMEOUT => 7,
-                CURLOPT_HTTPHEADER => $this->getHeaders("{$baseUrl}/v2/home")
-            ]);
-            $homeRes = curl_exec($ch);
-            $homeHttp = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            curl_close($ch);
+            $cookieFile = $session['cookie'];
+            $homeUrl = $baseUrl . '/v2/home';
+            $captchaUrl = $baseUrl . '/v2/captcha?r=' . rawurlencode((string)microtime(true));
 
-            // 2. Fetch binary captcha image
-            $random = microtime(true) * 1000;
-            $captchaUrl = "{$baseUrl}/v2/captcha?r={$random}";
-
-            $ch2 = curl_init($captchaUrl);
-            curl_setopt_array($ch2, [
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_SSL_VERIFYPEER => false,
-                CURLOPT_SSL_VERIFYHOST => false,
-                CURLOPT_COOKIEFILE => $this->cookieFile,
-                CURLOPT_TIMEOUT => 12,
-                CURLOPT_CONNECTTIMEOUT => 7,
-                CURLOPT_HTTPHEADER => array_merge($this->getHeaders("{$baseUrl}/v2/home"), [
-                    'Accept: image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
-                    'Sec-Fetch-Dest: image',
-                    'Sec-Fetch-Mode: no-cors',
-                    'Sec-Fetch-Site: same-origin'
+            $res = $this->request($captchaUrl, [
+                CURLOPT_COOKIEFILE => $cookieFile,
+                CURLOPT_COOKIEJAR => $cookieFile,
+                CURLOPT_HTTPHEADER => array_merge($this->getHeaders($homeUrl), [
+                    'Accept: image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8'
                 ])
             ]);
 
-            $imageData = curl_exec($ch2);
-            $httpCode2 = curl_getinfo($ch2, CURLINFO_HTTP_CODE);
-            $contentType = curl_getinfo($ch2, CURLINFO_CONTENT_TYPE);
-            $curlError = curl_error($ch2);
-            curl_close($ch2);
+            if ($res['http'] === 200 && $this->isValidCaptchaPayload($res['body'], $res['content_type'])) {
+                $mime = $res['content_type'];
+                if (!$mime || strpos(strtolower($mime), 'image/') !== 0) {
+                    $mime = 'image/png';
+                }
 
-            if ($httpCode2 === 200 && !empty($imageData) && strlen($imageData) > 30) {
-                $this->activeBaseUrl = $baseUrl;
-                $mime = !empty($contentType) ? $contentType : 'image/png';
-                $base64 = 'data:' . $mime . ';base64,' . base64_encode($imageData);
                 return [
                     'status' => 'success',
-                    'captcha_image' => $base64,
+                    'captcha_image' => 'data:' . $mime . ';base64,' . base64_encode($res['body']),
                     'server' => $baseUrl,
                     'message' => 'অফিসিয়াল শিক্ষা বোর্ড ক্যাপচা লোড হয়েছে।'
                 ];
             }
 
-            $lastError = $curlError ?: "HTTP {$httpCode2} on {$baseUrl}";
+            $errors[] = $res['error'] ?: "HTTP {$res['http']} / invalid captcha response from {$baseUrl}";
         }
 
         return [
             'status' => 'error',
-            'message' => 'শিক্ষা বোর্ডের কেন্দ্রীয় সার্ভার থেকে ক্যাপচা আনা যায়নি (' . $lastError . ')। অনুগ্রহ করে "নতুন ক্যাপচা" বাটনে ক্লিক করুন।'
+            'message' => 'শিক্ষা বোর্ডের অফিসিয়াল সার্ভার থেকে ক্যাপচা লোড করা যায়নি। ' . implode(' | ', $errors)
         ];
     }
 
+    /**
+     * Submit verification using the provider session that generated the
+     * currently active captcha. The provider is never switched mid-session.
+     */
     public function fetchResult($board, $year, $roll, $reg, $captcha, $exam = 'ssc') {
         if (!function_exists('curl_init')) {
             return [
@@ -140,12 +207,32 @@ class EducationBoardResult {
             ];
         }
 
-        // Clean & normalize inputs
-        $board = strtolower(trim($board));
-        $year = trim($year);
-        $roll = trim($roll);
-        $reg = trim($reg);
-        $captcha = trim($captcha);
+        $board = strtolower(trim((string)$board));
+        $year = trim((string)$year);
+        $roll = trim((string)$roll);
+        $reg = trim((string)$reg);
+        $captcha = trim((string)$captcha);
+        $exam = trim((string)$exam) ?: 'ssc';
+
+        if ($board === '' || $year === '' || $roll === '' || $captcha === '') {
+            return [
+                'status' => 1,
+                'msg' => 'বোর্ড, সাল, রোল এবং ক্যাপচা পূরণ করুন।'
+            ];
+        }
+
+        // Prefer the provider selected by the most recently created session.
+        // If there is no active provider in this PHP instance, test the cookie
+        // jars without creating a new captcha session.
+        $providers = [];
+        if ($this->activeBaseUrl) {
+            $providers[] = $this->activeBaseUrl;
+        }
+        foreach ($this->baseUrls as $baseUrl) {
+            if (!in_array($baseUrl, $providers, true)) {
+                $providers[] = $baseUrl;
+            }
+        }
 
         $postData = [
             'board' => $board,
@@ -158,42 +245,42 @@ class EducationBoardResult {
             'submit' => 'View Result'
         ];
 
-        $lastError = '';
+        $errors = [];
 
-        foreach ($this->baseUrls as $baseUrl) {
-            $ch = curl_init("{$baseUrl}/v2/getres");
-            curl_setopt_array($ch, [
-                CURLOPT_RETURNTRANSFER => true,
+        foreach ($providers as $baseUrl) {
+            $cookieFile = $this->cookieFile($baseUrl);
+            if (!file_exists($cookieFile) || filesize($cookieFile) === 0) {
+                continue;
+            }
+
+            $homeUrl = $baseUrl . '/v2/home';
+            $res = $this->request($baseUrl . '/v2/getres', [
                 CURLOPT_POST => true,
-                CURLOPT_POSTFIELDS => http_build_query($postData),
-                CURLOPT_SSL_VERIFYPEER => false,
-                CURLOPT_SSL_VERIFYHOST => false,
-                CURLOPT_COOKIEFILE => $this->cookieFile,
-                CURLOPT_TIMEOUT => 20,
-                CURLOPT_CONNECTTIMEOUT => 10,
-                CURLOPT_HTTPHEADER => array_merge($this->getHeaders("{$baseUrl}/v2/home", true), [
+                CURLOPT_POSTFIELDS => http_build_query($postData, '', '&'),
+                CURLOPT_COOKIEFILE => $cookieFile,
+                CURLOPT_COOKIEJAR => $cookieFile,
+                CURLOPT_HTTPHEADER => array_merge($this->getHeaders($homeUrl, true), [
                     'Origin: ' . $baseUrl
                 ])
             ]);
 
-            $response = curl_exec($ch);
-            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            $curlError = curl_error($ch);
-            curl_close($ch);
-
-            if ($httpCode === 200 && !empty($response)) {
-                $json = json_decode($response, true);
-                if (is_array($json)) {
-                    return $json;
-                }
+            if ($res['http'] !== 200 || trim((string)$res['body']) === '') {
+                $errors[] = $res['error'] ?: "HTTP {$res['http']} from {$baseUrl}/v2/getres";
+                continue;
             }
 
-            $lastError = $curlError ?: "HTTP {$httpCode} on {$baseUrl}";
+            $json = json_decode($res['body'], true);
+            if (is_array($json)) {
+                return $json;
+            }
+
+            $errors[] = "Invalid JSON response from {$baseUrl}";
         }
 
         return [
             'status' => 1,
-            'msg' => 'শিক্ষা বোর্ডের কেন্দ্রীয় সার্ভার থেকে ফলাফল পাওয়া যায়নি (' . $lastError . ')।'
+            'msg' => 'ক্যাপচা/ভেরিফিকেশন সেশন পাওয়া যায়নি বা ক্যাপচা মেয়াদ শেষ হয়েছে। অনুগ্রহ করে নতুন ক্যাপচা লোড করে আবার চেষ্টা করুন।'
+                . (empty($errors) ? '' : ' ' . implode(' | ', $errors))
         ];
     }
 }
