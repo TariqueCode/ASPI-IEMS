@@ -15,11 +15,15 @@ require_once __DIR__ . '/EducationBoardResult.php';
 
 try {
     $engine = new EducationBoardResult();
+
+    // Keep the exact bootstrap sequence used by the supplied successful
+    // project. The upstream cookie jar must remain the same for all calls.
+    $engine->solveChallenge();
+    $engine->get($engine->getBaseUrl() . '/v2/home');
     $image = $engine->getCaptchaImage();
 
-    // The admission UI expects JSON and displays the captcha as a data URL.
     $mime = 'image/jpeg';
-    $prefix = substr($image, 0, 16);
+    $prefix = substr($image, 0, 32);
     if (substr($prefix, 0, 8) === "\x89PNG\r\n\x1a\n") {
         $mime = 'image/png';
     } elseif (substr($prefix, 0, 3) === "\xFF\xD8\xFF") {
@@ -33,7 +37,6 @@ try {
     echo json_encode([
         'status' => 'success',
         'captcha_image' => 'data:' . $mime . ';base64,' . base64_encode($image),
-        'session_id' => session_id(),
         'message' => 'অফিসিয়াল শিক্ষা বোর্ড ক্যাপচা লোড হয়েছে।'
     ], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $e) {
