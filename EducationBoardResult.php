@@ -2,21 +2,16 @@
 /**
  * EducationBoardResult Engine
  *
- * Proxies the official Bangladesh Education Board result/captcha endpoints
- * through the institute server so the browser never needs to call the
- * government domain directly (avoids browser CORS/Cookie restrictions).
- *
- * Important: captcha and verification MUST use the same server-side session.
+ * Server-side proxy for the official Bangladesh Education Board result
+ * endpoints. Captcha and verification are bound to the same PHP session and
+ * provider cookie jar, preventing browser CORS/cookie problems and preventing
+ * one applicant's captcha session from overwriting another applicant's.
  */
 
 class EducationBoardResult {
     private $cookieDir;
     private $activeBaseUrl = null;
 
-    /**
-     * Keep the official providers separate. A captcha issued by one provider
-     * must never be submitted to another provider with a different session.
-     */
     private $baseUrls = [
         'https://eboardresults.com',
         'https://www.educationboardresults.gov.bd'
@@ -29,8 +24,6 @@ class EducationBoardResult {
             @mkdir($this->cookieDir, 0700, true);
         }
 
-        // Backward compatibility with the old constructor argument.
-        // A directory is used internally; each provider gets its own cookie jar.
         if ($cookiePath) {
             $dir = dirname($cookiePath);
             if (is_dir($dir) || @mkdir($dir, 0700, true)) {
@@ -39,10 +32,16 @@ class EducationBoardResult {
         }
     }
 
+    /** Make the cookie jar unique per browser PHP session and provider. */
     private function cookieFile($baseUrl) {
         $host = parse_url($baseUrl, PHP_URL_HOST) ?: 'default';
         $safeHost = preg_replace('/[^a-z0-9._-]+/i', '_', $host);
-        return rtrim($this->cookieDir, '/\\') . '/edu_board_' . $safeHost . '.txt';
+        $session = function_exists('session_id') ? session_id() : '';
+        $session = $session ?: 'anonymous';
+        $safeSession = preg_replace('/[^a-z0-9_-]+/i', '_', $session);
+
+        return rtrim($this->cookieDir, '/\\')
+            . '/edu_board_' . $safeSession . '_' . $safeHost . '.txt';
     }
 
     private function resetCookieFile($baseUrl) {
@@ -83,8 +82,6 @@ class EducationBoardResult {
             return true;
         }
 
-        // Some upstream servers omit/misreport Content-Type. Detect common
-        // image signatures so HTML error pages are never returned as captcha.
         $prefix = substr($data, 0, 16);
         return substr($prefix, 0, 8) === "\x89PNG\r\n\x1a\n"
             || substr($prefix, 0, 3) === "\xFF\xD8\xFF"
@@ -132,15 +129,12 @@ class EducationBoardResult {
             return [
                 'ok' => false,
                 'cookie' => $cookieFile,
-                'message' => $res['error'] ?: "HTTP {$res['http']} from {$baseUrl}/v2/home"
+                'message' => $res['error'] ?: "HTTP {$res['http']} from {$homeUrl}"
             ];
         }
 
         $this->activeBaseUrl = $baseUrl;
-        return [
-            'ok' => true,
-            'cookie' => $cookieFile
-        ];
+        return ['ok' => true, 'cookie' => $cookieFile];
     }
 
     public function getCaptcha() {
@@ -150,6 +144,14 @@ class EducationBoardResult {
                 'message' => 'PHP cURL Extension is not enabled on this server. cPanel থেকে PHP cURL extension চালু করুন।'
             ];
         }
+
+        // One PHP session = one applicant/browser captcha session.
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            @session_start();
+        }
+
+        // Remove stale provider selection when generating a new captcha.
+        unset($_SESSION['edu_board_captcha_provider']);
 
         $errors = [];
 
@@ -178,6 +180,9 @@ class EducationBoardResult {
                     $mime = 'image/png';
                 }
 
+                $_SESSION['edu_board_captcha_provider'] = $baseUrl;
+                $_SESSION['edu_board_captcha_created'] = time();
+
                 return [
                     'status' => 'success',
                     'captcha_image' => 'data:' . $mime . ';base64,' . base64_encode($res['body']),
@@ -195,16 +200,16 @@ class EducationBoardResult {
         ];
     }
 
-    /**
-     * Submit verification using the provider session that generated the
-     * currently active captcha. The provider is never switched mid-session.
-     */
     public function fetchResult($board, $year, $roll, $reg, $captcha, $exam = 'ssc') {
         if (!function_exists('curl_init')) {
             return [
                 'status' => 1,
                 'msg' => 'PHP cURL Extension is not enabled.'
             ];
+        }
+
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            @session_start();
         }
 
         $board = strtolower(trim((string)$board));
@@ -221,17 +226,33 @@ class EducationBoardResult {
             ];
         }
 
-        // Prefer the provider selected by the most recently created session.
-        // If there is no active provider in this PHP instance, test the cookie
-        // jars without creating a new captcha session.
-        $providers = [];
-        if ($this->activeBaseUrl) {
-            $providers[] = $this->activeBaseUrl;
+        // NEVER switch provider during verification. The captcha must be
+        // submitted to exactly the provider that generated it.
+        $provider = $_SESSION['edu_board_captcha_provider'] ?? null;
+        $created = (int)($_SESSION['edu_board_captcha_created'] ?? 0);
+
+        if (!$provider || !in_array($provider, $this->baseUrls, true)) {
+            return [
+                'status' => 1,
+                'msg' => 'ভেরিফিকেশন সেশন পাওয়া যায়নি। অনুগ্রহ করে নতুন ক্যাপচা লোড করুন।'
+            ];
         }
-        foreach ($this->baseUrls as $baseUrl) {
-            if (!in_array($baseUrl, $providers, true)) {
-                $providers[] = $baseUrl;
-            }
+
+        // Captcha sessions are intentionally short-lived.
+        if ($created > 0 && (time() - $created) > 10 * 60) {
+            unset($_SESSION['edu_board_captcha_provider'], $_SESSION['edu_board_captcha_created']);
+            return [
+                'status' => 1,
+                'msg' => 'ক্যাপচার মেয়াদ শেষ হয়েছে। অনুগ্রহ করে নতুন ক্যাপচা লোড করুন।'
+            ];
+        }
+
+        $cookieFile = $this->cookieFile($provider);
+        if (!file_exists($cookieFile) || filesize($cookieFile) === 0) {
+            return [
+                'status' => 1,
+                'msg' => 'ক্যাপচা সেশন পাওয়া যায়নি। অনুগ্রহ করে নতুন ক্যাপচা লোড করুন।'
+            ];
         }
 
         $postData = [
@@ -245,42 +266,36 @@ class EducationBoardResult {
             'submit' => 'View Result'
         ];
 
-        $errors = [];
+        $homeUrl = $provider . '/v2/home';
+        $res = $this->request($provider . '/v2/getres', [
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => http_build_query($postData, '', '&'),
+            CURLOPT_COOKIEFILE => $cookieFile,
+            CURLOPT_COOKIEJAR => $cookieFile,
+            CURLOPT_HTTPHEADER => array_merge($this->getHeaders($homeUrl, true), [
+                'Origin: ' . $provider
+            ])
+        ]);
 
-        foreach ($providers as $baseUrl) {
-            $cookieFile = $this->cookieFile($baseUrl);
-            if (!file_exists($cookieFile) || filesize($cookieFile) === 0) {
-                continue;
-            }
-
-            $homeUrl = $baseUrl . '/v2/home';
-            $res = $this->request($baseUrl . '/v2/getres', [
-                CURLOPT_POST => true,
-                CURLOPT_POSTFIELDS => http_build_query($postData, '', '&'),
-                CURLOPT_COOKIEFILE => $cookieFile,
-                CURLOPT_COOKIEJAR => $cookieFile,
-                CURLOPT_HTTPHEADER => array_merge($this->getHeaders($homeUrl, true), [
-                    'Origin: ' . $baseUrl
-                ])
-            ]);
-
-            if ($res['http'] !== 200 || trim((string)$res['body']) === '') {
-                $errors[] = $res['error'] ?: "HTTP {$res['http']} from {$baseUrl}/v2/getres";
-                continue;
-            }
-
-            $json = json_decode($res['body'], true);
-            if (is_array($json)) {
-                return $json;
-            }
-
-            $errors[] = "Invalid JSON response from {$baseUrl}";
+        if ($res['http'] !== 200 || trim((string)$res['body']) === '') {
+            return [
+                'status' => 1,
+                'msg' => $res['error'] ?: 'শিক্ষা বোর্ডের অফিসিয়াল সার্ভার থেকে ফলাফল পাওয়া যায়নি। আবার চেষ্টা করুন।'
+            ];
         }
 
-        return [
-            'status' => 1,
-            'msg' => 'ক্যাপচা/ভেরিফিকেশন সেশন পাওয়া যায়নি বা ক্যাপচা মেয়াদ শেষ হয়েছে। অনুগ্রহ করে নতুন ক্যাপচা লোড করে আবার চেষ্টা করুন।'
-                . (empty($errors) ? '' : ' ' . implode(' | ', $errors))
-        ];
+        $json = json_decode($res['body'], true);
+        if (!is_array($json)) {
+            return [
+                'status' => 1,
+                'msg' => 'অফিসিয়াল সার্ভারের উত্তর সঠিক ফরম্যাটে পাওয়া যায়নি।'
+            ];
+        }
+
+        // Captcha is single-use in practice; force a fresh session after a
+        // verification attempt so an old captcha cannot be reused accidentally.
+        unset($_SESSION['edu_board_captcha_provider'], $_SESSION['edu_board_captcha_created']);
+
+        return $json;
     }
 }
