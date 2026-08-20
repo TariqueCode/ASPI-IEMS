@@ -1906,6 +1906,104 @@ app.post('/api.php', handlePostApi);
 app.get('/api', handleGetApi);
 app.post('/api', handlePostApi);
 
+// Handle Education Board Captcha Endpoint (supports get_captcha.php & /api/get-edu-captcha)
+const handleGetEduCaptcha = async (req: express.Request, res: express.Response) => {
+  const sessionId = (req.query.session_id as string) || (req.body && req.body.session_id) || `edu_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+  try {
+    const captchaData = await eduFetcher.getSessionAndCaptcha(sessionId);
+    return res.json({
+      status: 'success',
+      success: true,
+      session_id: captchaData.sessionId,
+      captcha_image: captchaData.captchaImage,
+      is_fallback: captchaData.isFallback,
+      message: 'ক্যাপচা প্রস্তুত'
+    });
+  } catch (e: any) {
+    // Generate fallback SVG captcha on error
+    const fallbackCode = Math.floor(1000 + Math.random() * 9000).toString();
+    const svgBase64 = 'data:image/svg+xml;base64,' + Buffer.from(eduFetcher.generateSvgCaptcha(fallbackCode)).toString('base64');
+    eduSessions[sessionId] = {
+      cookies: [],
+      captchaCode: fallbackCode,
+      createdAt: Date.now(),
+      isFallback: true
+    };
+    return res.json({
+      status: 'success',
+      success: true,
+      session_id: sessionId,
+      captcha_image: svgBase64,
+      is_fallback: true,
+      message: 'ক্যাপচা প্রস্তুত'
+    });
+  }
+};
+
+app.get('/get_captcha.php', handleGetEduCaptcha);
+app.post('/get_captcha.php', handleGetEduCaptcha);
+app.get('/api/get-edu-captcha', handleGetEduCaptcha);
+app.post('/api/get-edu-captcha', handleGetEduCaptcha);
+
+// Handle Education Board Result Verification (supports fetch_result.php & /api/verify-edu-result)
+const handleFetchEduResult = async (req: express.Request, res: express.Response) => {
+  const input = req.body || req.query || {};
+  const board = input.board || 'chittagong';
+  const year = input.year || new Date().getFullYear().toString();
+  const roll = input.roll || '';
+  const reg = input.reg || input.registration || '';
+  const captcha = input.captcha || '';
+  const sessionId = input.session_id || '';
+
+  if (!roll || !reg || !captcha) {
+    return res.status(400).json({
+      status: 'error',
+      message: 'এসএসসি রোল, রেজিস্ট্রেশন ও ক্যাপচা সবগুলো ফিল্ড পূরণ করুন।'
+    });
+  }
+
+  try {
+    const student = await eduFetcher.fetchResult(
+      String(board),
+      String(year),
+      String(roll).trim(),
+      String(reg).trim(),
+      String(captcha).trim(),
+      String(sessionId || '')
+    );
+
+    const minGpa = parseFloat(db.site?.admission_info?.bteb_min_gpa || db.site?.admission_info?.min_gpa || '2.00') || 2.00;
+    const studentGpa = parseFloat(student.gpa || '0');
+
+    if (isNaN(studentGpa) || studentGpa < minGpa || student.is_passed === false) {
+      return res.status(400).json({
+        status: 'unqualified',
+        unqualified: true,
+        data: student,
+        student: student,
+        message: `শিক্ষার্থী পাস করেনি অথবা জিপিএ ২.০০ এর কম (জিপিএ: ${student.gpa || '০.০০'})।`
+      });
+    }
+
+    return res.json({
+      status: 'success',
+      data: student,
+      student: student,
+      message: 'শিক্ষা বোর্ডের কেন্দ্রীয় ডাটাবেজ থেকে শিক্ষার্থীর তথ্য সফলভাবে যাচাই হয়েছে।'
+    });
+  } catch (e: any) {
+    return res.status(400).json({
+      status: 'error',
+      message: e.message || 'ভেরিফিকেশন সম্পন্ন করা যায়নি। অনুগ্রহ করে ক্যাপচা চেক করে আবার চেষ্টা করুন।'
+    });
+  }
+};
+
+app.post('/fetch_result.php', handleFetchEduResult);
+app.get('/fetch_result.php', handleFetchEduResult);
+app.post('/api/verify-edu-result', handleFetchEduResult);
+app.get('/api/verify-edu-result', handleFetchEduResult);
+
 // Handle upload specifically via POST multipart
 const handleUploadEndpoint = (req: express.Request, res: express.Response) => {
   upload.single('file')(req, res, (err) => {

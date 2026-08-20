@@ -2577,34 +2577,40 @@
                     this.eduVerificationError = '';
                     this.captchaImgUrl = '';
                     try {
-                        // Try get_captcha.php first, then api.php?action=get_edu_captcha
                         let res = await fetch(`get_captcha.php?t=${Date.now()}`);
                         if (!res.ok) {
                             res = await fetch(`api.php?action=get_edu_captcha&t=${Date.now()}`);
                         }
+                        if (!res.ok) {
+                            res = await fetch(`/api/get-edu-captcha?t=${Date.now()}`);
+                        }
                         let data = await res.json();
-                        if (data.status === 'success' && data.captcha_image) {
-                            this.captchaImgUrl = data.captcha_image;
+                        const img = data.captcha_image || data.captchaImage || data.image;
+                        if (img) {
+                            this.captchaImgUrl = img;
+                            this.eduSessionId = data.session_id || '';
                             this.eduForm.captcha = '';
                         } else {
                             this.captchaImgUrl = '';
-                            this.eduVerificationError = data.message || 'শিক্ষা বোর্ডের অফিশিয়াল লাইভ সার্ভার থেকে ক্যাপচা আনা যায়নি। অনুগ্রহ করে "নতুন ক্যাপচা" আইকনে ক্লিক করে আবার চেষ্টা করুন।';
+                            this.eduVerificationError = data.message || 'ক্যাপচা প্রস্তুত করা যায়নি। অনুগ্রহ করে "নতুন ক্যাপচা" বাটনে ক্লিক করুন।';
                         }
                     } catch (e) {
-                        console.warn("Captcha fetch error:", e);
+                        console.warn("Captcha fetch fallback:", e);
                         try {
-                            let res2 = await fetch(`/api/get-edu-captcha?t=${Date.now()}`);
+                            let res2 = await fetch(`api.php?action=get_edu_captcha&t=${Date.now()}`);
                             let data2 = await res2.json();
-                            if (data2.status === 'success' && data2.captchaImage) {
-                                this.captchaImgUrl = data2.captchaImage;
+                            const img2 = data2.captcha_image || data2.captchaImage || data2.image;
+                            if (img2) {
+                                this.captchaImgUrl = img2;
+                                this.eduSessionId = data2.session_id || '';
                                 this.eduForm.captcha = '';
                             } else {
                                 this.captchaImgUrl = '';
-                                this.eduVerificationError = 'শিক্ষা বোর্ডের কেন্দ্রীয় সার্ভারের সাথে সংযোগ স্থাপন করা যায়নি। অনুগ্রহ করে ইন্টারনেট সংযোগ চেক করে "নতুন ক্যাপচা" বাটনে ক্লিক করুন।';
+                                this.eduVerificationError = 'ক্যাপচা লোড করা যায়নি। অনুগ্রহ করে "নতুন ক্যাপচা" বাটনে ক্লিক করুন।';
                             }
                         } catch (err) {
                             this.captchaImgUrl = '';
-                            this.eduVerificationError = 'শিক্ষা বোর্ডের কেন্দ্রীয় সার্ভার থেকে ক্যাপচা লোড করা যায়নি। অনুগ্রহ করে পুনরায় চেষ্টা করুন।';
+                            this.eduVerificationError = 'ক্যাপচা লোড করা যায়নি। অনুগ্রহ করে পুনরায় চেষ্টা করুন।';
                         }
                     }
                     this.isCaptchaLoading = false;
