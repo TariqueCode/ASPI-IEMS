@@ -3,12 +3,12 @@
 /**
  * Education Board Result Engine
  *
- * Uses the proven official Education Board flow:
- *   1) Start a PHP session + persistent upstream cookie jar.
- *   2) GET /v2/home and solve the anti-bot puzzle when present.
+ * Uses the proven working flow from the supplied successful project:
+ *   1) Use one persistent upstream cookie jar.
+ *   2) GET /v2/home and solve the anti-bot challenge when present.
  *   3) GET /v2/home again with the same cookies.
  *   4) GET /v2/captcha with the same cookies.
- *   5) POST /v2/getres with the same cookies; never recreate the session.
+ *   5) POST /v2/getres with the same cookies; do not recreate the session.
  */
 class EducationBoardResult {
     private $baseUrl = 'https://www.educationboardresults.gov.bd';
@@ -16,20 +16,15 @@ class EducationBoardResult {
     private $ch;
 
     public function __construct() {
-        // Session MUST start before calculating the cookie-file path.
-        if (session_status() !== PHP_SESSION_ACTIVE) {
-            @session_start();
-        }
-
         $cookieDir = __DIR__ . '/cookies';
         if (!is_dir($cookieDir)) {
             @mkdir($cookieDir, 0777, true);
         }
 
-        $sid = session_id() ?: 'anonymous';
-        $sid = preg_replace('/[^a-zA-Z0-9_-]/', '_', $sid);
-        $this->cookieFile = $cookieDir . '/edu_board_' . $sid . '.txt';
-
+        // Match the proven project: one stable upstream cookie jar.
+        // The browser never talks to the official service directly, so this
+        // cookie jar belongs only to the ASPI backend proxy.
+        $this->cookieFile = $cookieDir . '/edu_board_cookies.txt';
         if (!file_exists($this->cookieFile)) {
             @touch($this->cookieFile);
             @chmod($this->cookieFile, 0666);
@@ -39,6 +34,10 @@ class EducationBoardResult {
     }
 
     private function initCurl() {
+        if (!function_exists('curl_init')) {
+            throw new Exception('PHP cURL Extension is not enabled on this server.');
+        }
+
         $this->ch = curl_init();
         curl_setopt_array($this->ch, [
             CURLOPT_RETURNTRANSFER => true,
@@ -46,8 +45,8 @@ class EducationBoardResult {
             CURLOPT_MAXREDIRS => 5,
             CURLOPT_COOKIEFILE => $this->cookieFile,
             CURLOPT_COOKIEJAR => $this->cookieFile,
-            // Match the proven source exactly. The upstream service has
-            // historically required this on some shared-hosting servers.
+            // Keep this identical to the supplied working project. Some
+            // shared-hosting/OpenSSL environments fail verification upstream.
             CURLOPT_SSL_VERIFYPEER => false,
             CURLOPT_SSL_VERIFYHOST => false,
             CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -69,10 +68,12 @@ class EducationBoardResult {
             CURLOPT_HTTPHEADER => $headers,
             CURLOPT_POSTFIELDS => null,
         ]);
+
         $response = curl_exec($this->ch);
         if ($response === false) {
             throw new Exception('Official server request failed: ' . curl_error($this->ch));
         }
+
         return $response;
     }
 
@@ -99,12 +100,12 @@ class EducationBoardResult {
         if ($response === false) {
             throw new Exception('Official server POST failed: ' . curl_error($this->ch));
         }
+
         return $response;
     }
 
     /**
      * Solve the anti-bot puzzle challenge exposed by /v2/home.
-     * This is the critical part present in the supplied successful project.
      */
     public function solveChallenge() {
         $homeUrl = $this->baseUrl . '/v2/home';
@@ -115,9 +116,13 @@ class EducationBoardResult {
             'Referer: ' . $this->baseUrl . '/'
         ]);
 
+        if (!$html) {
+            throw new Exception('চ্যালেঞ্জ পেজ লোড করা যায়নি');
+        }
+
+        // The supplied working project uses this exact challenge shape.
         if (!preg_match('/var\s+challenge\s*=\s*(\{.*?\});/s', $html, $matches)) {
-            // No challenge => this session is already accepted.
-            return true;
+            return true; // already accepted / challenge not required
         }
 
         $challenge = json_decode($matches[1], true);
@@ -125,7 +130,6 @@ class EducationBoardResult {
             throw new Exception('চ্যালেঞ্জ ডেটা পার্স করা যায়নি');
         }
 
-        // Proven answer format from the supplied working project.
         $answer = 'puzzle:' . $challenge['missing']['id'];
 
         $response = $this->post(
@@ -144,20 +148,19 @@ class EducationBoardResult {
 
         $result = json_decode($response, true);
         if (!is_array($result) || ($result['ok'] ?? false) !== true) {
-            throw new Exception('অ্যান্টি-বট চ্যালেঞ্জ ভেরিফিকেশন ব্যর্থ হয়েছে');
+            throw new Exception('চ্যালেঞ্জ ভেরিফিকেশন ব্যর্থ হয়েছে');
         }
 
         return true;
     }
 
     /**
-     * Get the official captcha image after the challenge is solved.
+     * Get the official captcha image using the same cookie jar.
      */
     public function getCaptchaImage() {
+        // Keep the exact successful sequence supplied by the user.
         $this->solveChallenge();
 
-        // Re-open home after challenge verification to create the normal
-        // result session, retaining the SAME cookie jar.
         $homeUrl = $this->baseUrl . '/v2/home';
         $this->get($homeUrl, [
             'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
@@ -165,13 +168,14 @@ class EducationBoardResult {
             'Referer: ' . $this->baseUrl . '/'
         ]);
 
-        $captcha = $this->get($this->baseUrl . '/v2/captcha?r=' . rawurlencode((string)microtime(true)), [
+        $captchaUrl = $this->baseUrl . '/v2/captcha?r=' . rawurlencode((string)microtime(true));
+        $captcha = $this->get($captchaUrl, [
             'Accept: image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
             'Accept-Language: bn-BD,bn;q=0.9,en-US;q=0.8,en;q=0.7',
             'Referer: ' . $homeUrl,
         ]);
 
-        if (strlen($captcha) < 30) {
+        if (strlen((string)$captcha) < 30) {
             throw new Exception('অফিসিয়াল সার্ভার থেকে ক্যাপচা ইমেজ পাওয়া যায়নি');
         }
 
@@ -185,32 +189,13 @@ class EducationBoardResult {
             throw new Exception('অফিসিয়াল সার্ভার থেকে বৈধ ক্যাপচা ইমেজ পাওয়া যায়নি');
         }
 
-        $_SESSION['edu_board_captcha_created'] = time();
-
         return $captcha;
     }
 
     /**
-     * Submit verification using exactly the same upstream session used for
-     * the current captcha. Do NOT call solveChallenge() or /v2/home here.
+     * Submit result using the exact same persistent upstream cookie jar.
      */
     public function fetchResult($board, $year, $roll, $reg, $captcha, $exam = 'ssc') {
-        $created = (int)($_SESSION['edu_board_captcha_created'] ?? 0);
-        if ($created <= 0) {
-            return [
-                'status' => 1,
-                'msg' => 'ভেরিফিকেশন সেশন পাওয়া যায়নি। অনুগ্রহ করে নতুন ক্যাপচা লোড করুন।'
-            ];
-        }
-
-        if ((time() - $created) > 600) {
-            unset($_SESSION['edu_board_captcha_created']);
-            return [
-                'status' => 1,
-                'msg' => 'ক্যাপচার মেয়াদ শেষ হয়েছে। অনুগ্রহ করে নতুন ক্যাপচা লোড করুন।'
-            ];
-        }
-
         $postData = [
             'board' => strtolower(trim((string)$board)),
             'exam' => trim((string)$exam) ?: 'ssc',
@@ -235,15 +220,9 @@ class EducationBoardResult {
             ]
         );
 
-        // A captcha is effectively single-use. Clear the marker after submit.
-        unset($_SESSION['edu_board_captcha_created']);
-
         $json = json_decode($response, true);
         if (!is_array($json)) {
-            return [
-                'status' => 1,
-                'msg' => 'শিক্ষা বোর্ডের সার্ভার থেকে অবৈধ রেসপন্স পাওয়া গেছে।'
-            ];
+            throw new Exception('শিক্ষা বোর্ডের সার্ভার থেকে অবৈধ রেসপন্স পাওয়া গেছে।');
         }
 
         return $json;
