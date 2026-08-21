@@ -1,0 +1,89 @@
+name: Repair API JSON responses
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Make api.php JSON-safe
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          p = Path('api.php')
+          s = p.read_text(encoding='utf-8')
+
+          marker = "<?php\n"
+          guard = r'''<?php
+// ASPI_JSON_FATAL_GUARD_V1
+// Never let PHP fatal errors leak HTML into an API response.
+if (!defined('ASPI_JSON_FATAL_GUARD_V1')) {
+    define('ASPI_JSON_FATAL_GUARD_V1', true);
+    ob_start();
+    register_shutdown_function(function () {
+        $error = error_get_last();
+        if (!$error) {
+            return;
+        }
+        $fatalTypes = [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR, E_USER_ERROR];
+        if (!in_array($error['type'], $fatalTypes, true)) {
+            return;
+        }
+        while (ob_get_level() > 0) {
+            ob_end_clean();
+        }
+        http_response_code(500);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode([
+            'status' => 'error',
+            'message' => 'সার্ভারে API ত্রুটি ঘটেছে।',
+            'error_type' => (int)$error['type'],
+            'error_file' => basename((string)$error['file']),
+            'error_line' => (int)$error['line']
+        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    });
+}
+'''
+
+          if 'ASPI_JSON_FATAL_GUARD_V1' not in s:
+              if not s.startswith(marker):
+                  raise SystemExit('api.php does not start with <?php')
+              s = guard + s[len(marker):]
+
+          # Keep upload GC optional so a missing helper never kills every API request.
+          old = "require_once __DIR__ . '/upload_gc.php';"
+          new = "if (is_file(__DIR__ . '/upload_gc.php')) { require_once __DIR__ . '/upload_gc.php'; }"
+          s = s.replace(old, new)
+
+          p.write_text(s, encoding='utf-8')
+          print('api.php JSON guard applied.')
+          PY
+
+      - name: Validate PHP syntax
+        run: php -l api.php
+
+      - name: Commit changes
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add api.php
+          if git diff --cached --quiet; then
+            echo "No API changes needed."
+            exit 0
+          fi
+          git commit -m "Make API responses JSON-safe"
+          git push
