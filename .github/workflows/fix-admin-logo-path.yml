@@ -1,0 +1,58 @@
+name: Fix admin logo path
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fix admin logo URLs
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          p = Path('admin/index.html')
+          s = p.read_text(encoding='utf-8')
+
+          replacements = {
+              ':src="data.site.logo || \'logo.php\'"': ':src="data.site.logo ? \'../\' + data.site.logo : \'../logo.php\'"',
+              '@error="$el.src = \'\'"': '@error="$el.src = \'../logo.php?v=\' + Date.now()"',
+          }
+
+          changed = False
+          for old, new in replacements.items():
+              if old in s:
+                  s = s.replace(old, new)
+                  changed = True
+
+          if not changed:
+              print('No matching old logo markup found; no change needed.')
+          else:
+              p.write_text(s, encoding='utf-8')
+              print('Admin logo paths fixed.')
+          PY
+
+      - name: Commit changes
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add admin/index.html
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+          git commit -m "Fix admin logo asset paths"
+          git push
