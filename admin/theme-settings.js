@@ -1,4 +1,4 @@
-/* ASPI Admin Theme Controller - fixed header placement */
+/* ASPI Admin Theme Controller - fixed header placement + Alpine recovery */
 (function () {
   'use strict';
 
@@ -172,6 +172,31 @@
     }
   }
 
+  function loadAlpineFallback() {
+    if (window.Alpine || document.querySelector('script[data-aspi-alpine-fallback]')) return;
+
+    const script = document.createElement('script');
+    script.src = 'https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js';
+    script.defer = true;
+    script.setAttribute('data-aspi-alpine-fallback', 'true');
+    script.onerror = function () {
+      // Last-resort diagnostic: do not leave the whole dashboard blank forever.
+      document.documentElement.setAttribute('data-aspi-alpine-error', 'true');
+      document.querySelectorAll('[x-cloak]').forEach((el) => {
+        el.style.display = 'block';
+      });
+    };
+    document.head.appendChild(script);
+  }
+
+  function monitorAlpine() {
+    // The primary Alpine script is deferred. Give it enough time to load;
+    // only load the fallback CDN when the primary script did not initialize.
+    setTimeout(() => {
+      if (!window.Alpine) loadAlpineFallback();
+    }, 5000);
+  }
+
   function boot() {
     injectStyles();
     removeLegacySettingsCard();
@@ -195,4 +220,6 @@
     attempts += 1;
     if (boot() || attempts > 100) clearInterval(timer);
   }, 150);
+
+  monitorAlpine();
 })();
