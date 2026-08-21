@@ -1,0 +1,10 @@
+---
+# cPanel Git deployment configuration for ASPI-IEMS.
+# The repository itself is the live document root (/home/pachanda/IEMS),
+# so files are already served directly from the checked-out working tree.
+# Keep deployment intentionally non-destructive: cPanel only needs a valid
+# deployment manifest, and no copy operation should overwrite live data.
+deployment:
+  tasks:
+    - export DEPLOYPATH=/home/pachanda/IEMS/
+    - /bin/true
