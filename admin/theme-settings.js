@@ -1,4 +1,4 @@
-/* ASPI Admin Theme Controller - compact formal theme control */
+/* ASPI Admin Theme Controller - one consistent graphical theme control on every viewport */
 (function () {
   'use strict';
 
@@ -11,12 +11,12 @@
     style.id = STYLE_ID;
     style.textContent = `
       #${BUTTON_ID}{
-        width:32px!important;height:32px!important;padding:0!important;
-        border-radius:9px!important;
+        width:38px!important;height:38px!important;padding:0!important;
+        border-radius:11px!important;
         display:inline-flex!important;align-items:center!important;justify-content:center!important;
-        border:1px solid rgba(148,163,184,.24)!important;
+        border:1px solid rgba(148,163,184,.28)!important;
         background:#1e293b!important;color:#cbd5e1!important;
-        box-shadow:0 2px 8px rgba(15,23,42,.12)!important;
+        box-shadow:0 4px 14px rgba(15,23,42,.12)!important;
         cursor:pointer!important;
         transition:background .16s ease,border-color .16s ease,color .16s ease,transform .16s ease,box-shadow .16s ease!important;
       }
@@ -25,15 +25,15 @@
         background:#334155!important;
         border-color:rgba(250,204,21,.42)!important;
         color:#facc15!important;
-        box-shadow:0 5px 14px rgba(15,23,42,.18)!important;
+        box-shadow:0 7px 18px rgba(15,23,42,.18)!important;
       }
       #${BUTTON_ID}:active{transform:scale(.96)!important}
-      #${BUTTON_ID}:focus-visible{outline:none!important;box-shadow:0 0 0 2px rgba(250,204,21,.20),0 4px 12px rgba(15,23,42,.12)!important}
+      #${BUTTON_ID}:focus-visible{outline:none!important;box-shadow:0 0 0 2px rgba(250,204,21,.20),0 5px 14px rgba(15,23,42,.12)!important}
       #${BUTTON_ID} .aspi-theme-old-glyphs{display:none!important}
       #${BUTTON_ID} .aspi-theme-knob{
         position:static!important;transform:none!important;
-        width:24px!important;height:24px!important;
-        border-radius:7px!important;
+        width:28px!important;height:28px!important;
+        border-radius:9px!important;
         background:transparent!important;
         color:inherit!important;
         box-shadow:none!important;
@@ -41,10 +41,10 @@
       }
       #${BUTTON_ID} .aspi-theme-knob.translate-x-6,
       #${BUTTON_ID} .aspi-theme-knob.translate-x-7{transform:none!important}
-      #${BUTTON_ID} .aspi-theme-knob i{font-size:12px!important;line-height:1!important}
+      #${BUTTON_ID} .aspi-theme-knob i{font-size:13px!important;line-height:1!important}
       @media(max-width:640px){
-        #${BUTTON_ID}{width:30px!important;height:30px!important;border-radius:8px!important}
-        #${BUTTON_ID} .aspi-theme-knob{width:22px!important;height:22px!important}
+        #${BUTTON_ID}{width:38px!important;height:38px!important;border-radius:11px!important}
+        #${BUTTON_ID} .aspi-theme-knob{width:26px!important;height:26px!important}
       }
     `;
     document.head.appendChild(style);
@@ -83,7 +83,7 @@
     button.classList.remove('hidden', 'sm:inline-flex');
     button.style.display = 'inline-flex';
     button.setAttribute('title', 'থিম পরিবর্তন');
-    button.setAttribute('aria-label', 'থিম পরিবর্তন');
+    button.setAttribute('aria-label', 'লাইট / ডার্ক মোড পরিবর্তন');
     button.setAttribute('data-theme-control', 'true');
 
     const glyphs = button.children[0];
