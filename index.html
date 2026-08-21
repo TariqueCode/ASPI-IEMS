@@ -159,6 +159,23 @@
             animation: orbFloat3 20s ease-in-out infinite;
         }
     </style>
+
+<style id="aspi-native-select-dark">
+/* Native form controls: keep the popup/dropdown dark when ASPI is in dark mode. */
+.dark select {
+    color-scheme: dark;
+}
+.dark select option,
+.dark select optgroup {
+    background-color: #0f172a !important;
+    color: #f8fafc !important;
+}
+.dark select option:checked,
+.dark select option:hover {
+    background-color: #1e3a8a !important;
+    color: #ffffff !important;
+}
+</style>
 </head>
 
 <body class="text-slate-800 dark:text-slate-100 transition-colors duration-500 overflow-x-hidden" x-data="frontendApp" :style="`font-size: ${data.site.font_size || 16}px;`">
