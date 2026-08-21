@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ASPI এডমিন কন্ট্রোল প্যানেল</title>
-    <link id="adminFavicon" rel="icon" type="image/png" href="../">
-    <link id="adminAppleFavicon" rel="apple-touch-icon" href="../">
+    <link id="adminFavicon" rel="icon" type="image/png" href="">
+    <link id="adminAppleFavicon" rel="apple-touch-icon" href="">
     
     <script>
         // Compatibility shim for iframe environments where window.fetch is a getter-only property
@@ -72,7 +72,7 @@
             }
         }
     </script>
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.9/dist/cdn.min.js"></script>
+    <script defer src="../assets/vendor/alpine.min.js"></script>
 
     <style>
         body { font-family: 'Hind Siliguri', sans-serif; }
@@ -103,8 +103,8 @@
         <div class="bg-white dark:bg-slate-800 w-full max-w-md rounded-3xl p-6 sm:p-8 shadow-2xl border border-slate-200 dark:border-slate-700 relative my-8">
             <div class="text-center mb-6">
                 <div class="w-20 h-20 mx-auto mb-3 bg-white dark:bg-slate-900 rounded-2xl border-2 border-indigo-100 dark:border-slate-700 flex items-center justify-center p-2 shadow-lg">
-                    <img :src="data.site.logo || '../'" 
-                         @error="$el.src = $el.src.includes('ASPI-Logo.png') ? '' : '../'" 
+                    <img :src="data.site.logo || ''" 
+                         @error="$el.src = ''" 
                          class="w-full h-full object-contain" 
                          alt="ASPI Logo">
                 </div>
@@ -152,18 +152,6 @@
                     <span x-text="isLoggingIn ? 'যাচাই করা হচ্ছে...' : 'লগইন করুন'"></span>
                 </button>
             </form>
-
-            <!-- Default Credentials Note -->
-            <div class="mt-6 pt-4 border-t border-slate-100 dark:border-slate-700/80 text-center space-y-3">
-                <div class="p-3 bg-indigo-50/80 dark:bg-slate-900/80 rounded-2xl border border-indigo-100 dark:border-slate-700 text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
-                    <span class="font-black text-indigo-700 dark:text-brand-gold flex items-center justify-center mb-1">
-                        <i class="fa-solid fa-shield-halved mr-1"></i> ডিফল্ট এডমিন লগইন তথ্য
-                    </span>
-                    <div>Username: <strong class="text-slate-900 dark:text-white font-mono">Tarique</strong></div>
-                    <div>Password: <strong class="text-slate-900 dark:text-white font-mono">#Tarique-1998</strong></div>
-                    <p class="text-[10px] text-slate-400 dark:text-slate-400 mt-1">(লগইন করার পর ড্যাশবোর্ড থেকে পাসওয়ার্ড পরিবর্তন ও ডাটাবেজ লিঙ্ক করতে পারবেন)</p>
-                </div>
-
                 <!-- Database & Hosting Connection Help Button -->
                 <button type="button" @click="showHostingGuide = true" class="text-xs font-bold text-indigo-600 dark:text-amber-400 hover:underline inline-flex items-center">
                     <i class="fa-solid fa-circle-question mr-1.5"></i> হোস্টিংয়ে ডাটাবেজ লিঙ্ক ও লগইন সমস্যা সমাধান গাইড
@@ -229,7 +217,7 @@
             <div class="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
                 <div class="flex items-center space-x-3">
                     <div class="w-10 h-10 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center overflow-hidden shrink-0 shadow-md">
-                        <img :src="data.site.logo || '../'" @error="$el.src = $el.src.includes('ASPI-Logo.png') ? '' : '../'" class="w-full h-full object-contain p-0.5" alt="ASPI">
+                        <img :src="data.site.logo || ''" @error="$el.src = ''" class="w-full h-full object-contain p-0.5" alt="ASPI">
                     </div>
                     <div>
                         <h2 class="font-black text-base text-slate-900 dark:text-white leading-tight">ASPI প্যানেল</h2>
