@@ -1,0 +1,128 @@
+name: Final API JSON transport safety
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Patch PHP API output
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          p = Path('api.php')
+          s = p.read_text(encoding='utf-8')
+
+          header = """<?php
+// ASPI_FINAL_JSON_OUTPUT_V3
+ini_set('display_errors', '0');
+ini_set('display_startup_errors', '0');
+ini_set('log_errors', '1');
+error_reporting(E_ALL);
+set_error_handler(function($severity, $message, $file, $line) {
+    error_log("ASPI API warning [$severity] $message in $file:$line");
+    return true;
+}, E_WARNING | E_NOTICE | E_DEPRECATED | E_USER_WARNING | E_USER_NOTICE | E_USER_DEPRECATED);
+"""
+
+          if 'ASPI_FINAL_JSON_OUTPUT_V3' not in s:
+              if not s.startswith('<?php'):
+                  raise SystemExit('api.php does not start with <?php')
+              s = header + s[len('<?php'):]
+
+          # Normalize all existing upload_gc guards to one safe include.
+          s = re.sub(
+              r"// ASPI_UPLOAD_GC_ENABLED_V1\s*if\s*\(is_file\(__DIR__\s*\.\s*'/upload_gc\.php'\)\)\s*\{.*?require_once\s+__DIR__\s*\.\s*'/upload_gc\.php';\s*\}.*?(?=\$dbFile)",
+              "// ASPI_UPLOAD_GC_ENABLED_V1\nif (is_file(__DIR__ . '/upload_gc.php')) { require_once __DIR__ . '/upload_gc.php'; }\n",
+              s,
+              count=1,
+              flags=re.S,
+          )
+
+          p.write_text(s, encoding='utf-8')
+          PY
+
+      - name: Patch admin JSON response handling
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          p = Path('admin/theme-settings.js')
+          s = p.read_text(encoding='utf-8')
+          marker = '/* ASPI_FINAL_JSON_RESPONSE_SHIM_V1 */'
+
+          if marker not in s:
+              shim = r'''
+
+/* ASPI_FINAL_JSON_RESPONSE_SHIM_V1 */
+(function () {
+  try {
+    if (!window.Response || window.__ASPI_JSON_RESPONSE_SHIM__) return;
+    window.__ASPI_JSON_RESPONSE_SHIM__ = true;
+    const nativeJson = Response.prototype.json;
+    Response.prototype.json = async function () {
+      const text = await this.text();
+      const trimmed = String(text || '').trim();
+      try {
+        return JSON.parse(trimmed);
+      } catch (_) {
+        const starts = [trimmed.indexOf('{'), trimmed.indexOf('[')].filter((n) => n >= 0);
+        if (starts.length) {
+          const start = Math.min(...starts);
+          const candidates = [
+            trimmed.slice(start).trim(),
+            trimmed.slice(start).replace(/[\s\r\n]+$/, '').trim()
+          ];
+          for (const candidate of candidates) {
+            try { return JSON.parse(candidate); } catch (_) {}
+            const endObj = candidate.lastIndexOf('}');
+            const endArr = candidate.lastIndexOf(']');
+            const end = Math.max(endObj, endArr);
+            if (end > 0) {
+              try { return JSON.parse(candidate.slice(0, end + 1)); } catch (_) {}
+            }
+          }
+        }
+        throw new Error('ASPI_API_NON_JSON_RESPONSE: ' + trimmed.slice(0, 300));
+      }
+    };
+  } catch (e) {
+    console.warn('ASPI JSON response shim:', e);
+  }
+})();
+'''
+              s += shim
+              p.write_text(s, encoding='utf-8')
+          PY
+
+      - name: Validate PHP
+        run: php -l api.php
+
+      - name: Commit patched files
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add api.php admin/theme-settings.js
+          if git diff --cached --quiet; then
+            echo "No changes needed."
+            exit 0
+          fi
+          git commit -m "Make admin API JSON transport resilient"
+          git push
