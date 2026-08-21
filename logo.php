@@ -7,7 +7,8 @@
 declare(strict_types=1);
 
 header('X-Content-Type-Options: nosniff');
-header('Cache-Control: public, max-age=300, must-revalidate');
+header('Cache-Control: no-cache, must-revalidate, max-age=0');
+header('Vary: Accept');
 
 $dbFile = __DIR__ . '/data/db.json';
 $logoPath = '';
@@ -22,7 +23,6 @@ if (is_file($dbFile)) {
     }
 }
 
-// Only allow the dashboard-managed upload area. Never accept arbitrary paths.
 $logoPath = ltrim(str_replace('\\', '/', $logoPath), '/');
 $prefix = 'assets/uploads/';
 
@@ -32,7 +32,6 @@ if ($logoPath === '' || strncmp($logoPath, $prefix, strlen($prefix)) !== 0) {
 
 $logoFile = $logoPath !== '' ? __DIR__ . '/' . $logoPath : '';
 
-// Prevent path traversal even if the database was manually edited.
 if ($logoFile !== '') {
     $realUploadDir = realpath(__DIR__ . '/assets/uploads');
     $realLogoFile = realpath($logoFile);
@@ -43,8 +42,6 @@ if ($logoFile !== '') {
     }
 }
 
-// A tiny transparent SVG keeps the page free of broken-image icons until a
-// real logo is uploaded from the dashboard.
 if ($logoFile === '') {
     $empty = '<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1" viewBox="0 0 1 1"><rect width="1" height="1" fill="transparent"/></svg>';
     header('Content-Type: image/svg+xml; charset=UTF-8');
