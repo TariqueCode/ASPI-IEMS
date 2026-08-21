@@ -21,11 +21,20 @@ if (!is_dir($uploadDir)) {
     @mkdir($uploadDir, 0777, true);
 }
 
+function aspiReadableUploadName(string $desired, string $fallback): string
+{
+    $base = trim($desired !== '' ? pathinfo($desired, PATHINFO_FILENAME) : pathinfo($fallback, PATHINFO_FILENAME));
+    $base = preg_replace('/[\\x00-\\x1F\\x7F\\\\\\/:*?\"<>|]+/u', ' ', (string)$base);
+    $base = trim(preg_replace('/\\s+/u', ' ', $base), ' .');
+    return $base !== '' ? $base : 'ASPI-File';
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Remove uploads no longer referenced by the saved site data before accepting a new upload.
+    // Remove files that are already orphaned before accepting a replacement upload.
     aspiCleanupUnreferencedUploads();
+
     $file = $_FILES['file'] ?? $_FILES['image'] ?? $_FILES['upload'] ?? null;
-    
+
     if ($file && isset($file['tmp_name']) && is_uploaded_file($file['tmp_name'])) {
         if ($file['error'] !== UPLOAD_ERR_OK) {
             http_response_code(400);
@@ -36,18 +45,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
         $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'ico', 'pdf', 'doc', 'docx', 'ttf', 'woff', 'woff2', 'csv', 'zip'];
 
-        if (!in_array($ext, $allowed)) {
+        if (!in_array($ext, $allowed, true)) {
             http_response_code(400);
             echo json_encode(['error' => 'অননুমোদিত ফাইল ফরম্যাট (.' . $ext . ')। শুধুমাত্র ছবি ও ডকুমেন্ট ফাইল আপলোড করা যাবে।'], JSON_UNESCAPED_UNICODE);
             exit;
         }
 
-        $uniqueName = time() . '_' . rand(1000, 9999) . '.' . $ext;
+        $baseName = aspiReadableUploadName((string)($_POST['desired_filename'] ?? ''), (string)$file['name']);
+        $uniqueName = $baseName . '.' . $ext;
         $targetPath = $uploadDir . '/' . $uniqueName;
         $relativePath = 'assets/uploads/' . $uniqueName;
 
         if (move_uploaded_file($file['tmp_name'], $targetPath) || @copy($file['tmp_name'], $targetPath)) {
-            chmod($targetPath, 0644);
+            @chmod($targetPath, 0644);
             echo json_encode([
                 'status' => 'success',
                 'file_url' => $relativePath,
@@ -56,18 +66,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'message' => 'ফাইল সফলভাবে আপলোড হয়েছে।'
             ], JSON_UNESCAPED_UNICODE);
             exit;
-        } else {
-            http_response_code(500);
-            echo json_encode(['error' => 'ফাইল সার্ভারে সেভ করা যায়নি। ফোল্ডার পারমিশন (assets/uploads) 755 বা 777 চেক করুন।'], JSON_UNESCAPED_UNICODE);
-            exit;
         }
+
+        http_response_code(500);
+        echo json_encode(['error' => 'ফাইল সার্ভারে সেভ করা যায়নি। ফোল্ডার পারমিশন (assets/uploads) 755 বা 777 চেক করুন।'], JSON_UNESCAPED_UNICODE);
+        exit;
     }
 
-    // Check base64 input
+    // Optional base64 input.
     $raw = file_get_contents('php://input');
     $json = json_decode($raw, true);
     $base64 = $json['base64'] ?? $json['image_base64'] ?? '';
-    if (!empty($base64) && preg_match('/^data:([a-zA-Z0-9]+\/[a-zA-Z0-9\-\+\.]+);base64,(.+)$/', $base64, $bMatches)) {
+    if (!empty($base64) && preg_match('/^data:([a-zA-Z0-9]+\\/[a-zA-Z0-9\\-\\+\\.]+);base64,(.+)$/', $base64, $bMatches)) {
         $mime = $bMatches[1];
         $binary = base64_decode($bMatches[2]);
         $mimeMap = [
@@ -76,12 +86,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'application/pdf' => 'pdf'
         ];
         $ext = $mimeMap[$mime] ?? 'png';
-        $uniqueName = time() . '_' . rand(1000, 9999) . '.' . $ext;
+        $baseName = aspiReadableUploadName((string)($json['desired_filename'] ?? ''), 'ASPI-File');
+        $uniqueName = $baseName . '.' . $ext;
         $targetPath = $uploadDir . '/' . $uniqueName;
         $relativePath = 'assets/uploads/' . $uniqueName;
 
-        if (@file_put_contents($targetPath, $binary)) {
-            chmod($targetPath, 0644);
+        if (@file_put_contents($targetPath, $binary) !== false) {
+            @chmod($targetPath, 0644);
             echo json_encode([
                 'status' => 'success',
                 'file_url' => $relativePath,
