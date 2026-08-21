@@ -1,10 +1,11 @@
-/* ASPI Admin Theme Controller - fixed header placement + reliable Alpine recovery */
+/* ASPI Admin Theme Controller - compact theme control + upload naming + logo recovery */
 (function () {
   'use strict';
 
   const STYLE_ID = 'aspi-admin-theme-fixed-style';
   const BUTTON_ID = 'aspi-admin-global-theme';
   const SLOT_ID = 'aspi-admin-theme-slot';
+  const UPLOAD_CONTEXT_KEY = '__aspiUploadContext';
 
   function injectStyles() {
     if (document.getElementById(STYLE_ID)) return;
@@ -140,9 +141,104 @@
     tryNext(0);
   }
 
+  function safeBase(value, fallback = 'ASPI-File') {
+    const cleaned = String(value || '')
+      .replace(/[\\/:*?"<>|\u0000-\u001F]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .replace(/[. ]+$/g, '');
+    return cleaned || fallback;
+  }
+
+  function collectUploadContext(input) {
+    const file = input?.files?.[0];
+    if (!file) return null;
+
+    let text = '';
+    const values = [];
+    let node = input;
+    for (let i = 0; i < 8 && node; i += 1, node = node.parentElement) {
+      text += ' ' + (node.textContent || '');
+      node.querySelectorAll?.('input:not([type="file"]), textarea, select').forEach((field) => {
+        const value = String(field.value || '').trim();
+        if (value) values.push(value);
+      });
+    }
+    const haystack = `${text} ${values.join(' ')}`;
+    const ext = (file.name.split('.').pop() || 'bin').toLowerCase();
+    let base = '';
+
+    if (/ইনস্টিটিউট লোগো/i.test(haystack)) base = 'ASPI-Logo';
+    else if (/প্রতিষ্ঠাতার প্রতিকৃতি|প্রতিষ্ঠাতার ছবি/i.test(haystack) || values.some(v => /সিরাজুল ইসলাম/i.test(v))) base = 'Sirajul Islam - Founder';
+    else if (/কাস্টম বাংলা ফন্ট/i.test(haystack)) base = 'ASPI-Custom-Font';
+    else if (values.some(v => /আফনান ইসলাম|Afnan Islam/i.test(v))) base = 'Afnan Islam - Chairman';
+    else if (values.some(v => /নুরুল ইসলাম|Nurul Islam/i.test(v))) base = 'Nurul Islam - President';
+    else {
+      const meaningful = values.filter(v => v.length > 2 && !/^ডিপ্লোমা$|^NSDA$|^all$/i.test(v));
+      if (meaningful.length) {
+        // Prefer the first name-like value and append the next designation/title when present.
+        base = meaningful[0];
+        if (meaningful[1] && meaningful[1] !== base && meaningful[1].length < 80) base += ' - ' + meaningful[1];
+      }
+    }
+
+    return `${safeBase(base, 'ASPI-File')}.${ext}`;
+  }
+
+  function installUploadBridge() {
+    if (window.__aspiUploadBridgeInstalled) return;
+    window.__aspiUploadBridgeInstalled = true;
+
+    document.addEventListener('change', (event) => {
+      const input = event.target;
+      if (!(input instanceof HTMLInputElement) || input.type !== 'file') return;
+      const filename = collectUploadContext(input);
+      if (filename) window[UPLOAD_CONTEXT_KEY] = { filename, at: Date.now() };
+    }, true);
+
+    const nativeFetch = window.fetch.bind(window);
+    window.fetch = function (resource, options = {}) {
+      let url = typeof resource === 'string' ? resource : (resource?.url || '');
+      const body = options?.body;
+      const ctx = window[UPLOAD_CONTEXT_KEY];
+
+      if (body instanceof FormData && ctx && Date.now() - ctx.at < 30000) {
+        if (!body.has('desired_filename')) body.append('desired_filename', ctx.filename);
+
+        // Always use the canonical named upload endpoint. This keeps old
+        // admin code that calls api.php?action=upload working too.
+        if (/api\.php\?action=upload(?:&|$)/.test(url) || /\/api\/upload(?:\?|$)/.test(url)) {
+          url = url.startsWith('http') ? new URL('/upload.php', url).toString() : '../upload.php';
+          options = { ...options, body };
+        }
+      }
+
+      return nativeFetch(url || resource, options);
+    };
+  }
+
+  function ensureAdminLogoFallback() {
+    const cacheBust = Date.now();
+    document.querySelectorAll('img[alt="ASPI Logo"]').forEach((img) => {
+      const fallback = '../logo.php?v=' + cacheBust;
+      if (!img.getAttribute('src') || img.getAttribute('src') === 'undefined') {
+        img.setAttribute('src', fallback);
+      }
+      if (!img.dataset.aspiLogoFallbackBound) {
+        img.dataset.aspiLogoFallbackBound = '1';
+        img.addEventListener('error', () => {
+          if (img.src.includes('logo.php')) return;
+          img.src = fallback;
+        }, { once: true });
+      }
+    });
+  }
+
   function boot() {
     try {
       injectStyles();
+      installUploadBridge();
+      ensureAdminLogoFallback();
       removeLegacySettingsCard();
       removeDefaultLoginInfo();
       const header = findHeader();
@@ -160,7 +256,6 @@
     }
   }
 
-  // Give the original deferred Alpine script a moment; then use reliable fallback CDNs.
   setTimeout(recoverAlpine, 1800);
   setTimeout(() => {
     if (!window.Alpine) recoverAlpine();
