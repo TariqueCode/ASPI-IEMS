@@ -1,4 +1,25 @@
 <?php
+// ASPI_JSON_FATAL_GUARD_V2
+if (!defined('ASPI_JSON_FATAL_GUARD_V2')) {
+    define('ASPI_JSON_FATAL_GUARD_V2', true);
+    ob_start();
+    register_shutdown_function(function () {
+        $error = error_get_last();
+        if (!$error) return;
+        $fatalTypes = [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR, E_USER_ERROR];
+        if (!in_array($error['type'], $fatalTypes, true)) return;
+        while (ob_get_level() > 0) @ob_end_clean();
+        http_response_code(500);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode([
+            'status' => 'error',
+            'message' => 'সার্ভারে API ত্রুটি ঘটেছে।',
+            'error_type' => (int)$error['type'],
+            'error_file' => basename((string)$error['file']),
+            'error_line' => (int)$error['line']
+        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    });
+}
 /**
  * ==============================================================================
  * Ashab Siraj Polytechnic Institute (ASPI) - Backend API Controller
@@ -28,9 +49,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 $baseDir = __DIR__;
 $dataDir = $baseDir . '/data';
 $uploadDir = $baseDir . '/assets/uploads';
-
 // ASPI_UPLOAD_GC_ENABLED_V1
-if (is_file(__DIR__ . '/upload_gc.php')) { if (is_file(__DIR__ . '/upload_gc.php')) { if (is_file(__DIR__ . '/upload_gc.php')) { if (is_file(__DIR__ . '/upload_gc.php')) { require_once __DIR__ . '/upload_gc.php'; } } } }
+if (is_file(__DIR__ . '/upload_gc.php')) { require_once __DIR__ . '/upload_gc.php'; }
 $dbFile = $dataDir . '/db.json';
 $mysqlConfigFile = $dataDir . '/mysql-config.json';
 
