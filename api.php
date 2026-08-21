@@ -28,6 +28,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 $baseDir = __DIR__;
 $dataDir = $baseDir . '/data';
 $uploadDir = $baseDir . '/assets/uploads';
+
+// ASPI_UPLOAD_GC_ENABLED_V1
+require_once __DIR__ . '/upload_gc.php';
 $dbFile = $dataDir . '/db.json';
 $mysqlConfigFile = $dataDir . '/mysql-config.json';
 
@@ -1073,6 +1076,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (isset($jsonBody['faqs'])) $db['faqs'] = $jsonBody['faqs'];
         if (isset($jsonBody['admissions'])) $db['admissions'] = $jsonBody['admissions'];
         saveDatabase($db);
+        aspiCleanupUnreferencedUploads($db);
         echo json_encode(['status' => 'success', 'message' => 'ওয়েবসাইটের তথ্য সংরক্ষিত হয়েছে।'], JSON_UNESCAPED_UNICODE);
         exit;
     }

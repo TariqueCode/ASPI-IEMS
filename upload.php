@@ -16,11 +16,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 $uploadDir = __DIR__ . '/assets/uploads';
+require_once __DIR__ . '/upload_gc.php';
 if (!is_dir($uploadDir)) {
     @mkdir($uploadDir, 0777, true);
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Remove uploads no longer referenced by the saved site data before accepting a new upload.
+    aspiCleanupUnreferencedUploads();
     $file = $_FILES['file'] ?? $_FILES['image'] ?? $_FILES['upload'] ?? null;
     
     if ($file && isset($file['tmp_name']) && is_uploaded_file($file['tmp_name'])) {
