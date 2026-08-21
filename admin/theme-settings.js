@@ -1,4 +1,4 @@
-/* ASPI Admin Theme Controller - single global control */
+/* ASPI Admin Theme Controller - compact formal theme control */
 (function () {
   'use strict';
 
@@ -11,27 +11,43 @@
     style.id = STYLE_ID;
     style.textContent = `
       #${BUTTON_ID}{
-        width:38px;height:38px;padding:0;border-radius:11px;
-        display:inline-flex;align-items:center;justify-content:center;
-        border:1px solid rgba(148,163,184,.28);
-        background:rgba(255,255,255,.92);color:#475569;
-        box-shadow:0 4px 14px rgba(15,23,42,.08);
-        cursor:pointer;transition:transform .16s ease,background .16s ease,border-color .16s ease,box-shadow .16s ease;
+        width:32px!important;height:32px!important;padding:0!important;
+        border-radius:9px!important;
+        display:inline-flex!important;align-items:center!important;justify-content:center!important;
+        border:1px solid rgba(148,163,184,.24)!important;
+        background:#1e293b!important;color:#cbd5e1!important;
+        box-shadow:0 2px 8px rgba(15,23,42,.12)!important;
+        cursor:pointer!important;
+        transition:background .16s ease,border-color .16s ease,color .16s ease,transform .16s ease,box-shadow .16s ease!important;
       }
-      #${BUTTON_ID}:hover{transform:translateY(-1px);box-shadow:0 7px 18px rgba(15,23,42,.12)}
-      #${BUTTON_ID}:active{transform:translateY(0)}
-      #${BUTTON_ID} i{font-size:14px;line-height:1}
-      .dark #${BUTTON_ID}{background:#0f172a;color:#facc15;border-color:rgba(148,163,184,.22);box-shadow:0 5px 18px rgba(0,0,0,.24)}
-      @media(max-width:640px){#${BUTTON_ID}{width:36px;height:36px;border-radius:10px}}
+      #${BUTTON_ID}:hover{
+        transform:translateY(-1px)!important;
+        background:#334155!important;
+        border-color:rgba(250,204,21,.42)!important;
+        color:#facc15!important;
+        box-shadow:0 5px 14px rgba(15,23,42,.18)!important;
+      }
+      #${BUTTON_ID}:active{transform:scale(.96)!important}
+      #${BUTTON_ID}:focus-visible{outline:none!important;box-shadow:0 0 0 2px rgba(250,204,21,.20),0 4px 12px rgba(15,23,42,.12)!important}
+      #${BUTTON_ID} .aspi-theme-old-glyphs{display:none!important}
+      #${BUTTON_ID} .aspi-theme-knob{
+        position:static!important;transform:none!important;
+        width:24px!important;height:24px!important;
+        border-radius:7px!important;
+        background:transparent!important;
+        color:inherit!important;
+        box-shadow:none!important;
+        padding:0!important;
+      }
+      #${BUTTON_ID} .aspi-theme-knob.translate-x-6,
+      #${BUTTON_ID} .aspi-theme-knob.translate-x-7{transform:none!important}
+      #${BUTTON_ID} .aspi-theme-knob i{font-size:12px!important;line-height:1!important}
+      @media(max-width:640px){
+        #${BUTTON_ID}{width:30px!important;height:30px!important;border-radius:8px!important}
+        #${BUTTON_ID} .aspi-theme-knob{width:22px!important;height:22px!important}
+      }
     `;
     document.head.appendChild(style);
-  }
-
-  function getApp() {
-    try {
-      const root = document.querySelector('[x-data="adminApp"]');
-      return window.Alpine && root ? window.Alpine.$data(root) : null;
-    } catch (_) { return null; }
   }
 
   function isThemeButton(button) {
@@ -53,70 +69,45 @@
     });
   }
 
-  function findHeaderThemeButton() {
+  function findPrimaryButton() {
     const buttons = Array.from(document.querySelectorAll('button')).filter(isThemeButton);
-    return buttons.find((b) => (b.className || '').includes('hidden sm:inline-flex')) || buttons[0] || null;
+    return buttons.find((b) => (b.className || '').includes('hidden sm:inline-flex'))
+      || buttons.find((b) => b.closest('header'))
+      || buttons[0]
+      || null;
   }
 
   function stylePrimaryButton(button) {
     if (!button) return;
+    button.id = BUTTON_ID;
     button.classList.remove('hidden', 'sm:inline-flex');
-    button.id = BUTTON_ID;
     button.style.display = 'inline-flex';
-    button.setAttribute('title', 'লাইট / ডার্ক মোড পরিবর্তন');
-    button.setAttribute('aria-label', 'লাইট / ডার্ক মোড পরিবর্তন');
+    button.setAttribute('title', 'থিম পরিবর্তন');
+    button.setAttribute('aria-label', 'থিম পরিবর্তন');
+    button.setAttribute('data-theme-control', 'true');
 
-    // Keep Alpine's existing reactive icon/state, but flatten the old track into a formal icon button.
-    const children = button.children;
-    if (children.length >= 2) {
-      const glyphs = children[0];
-      const knob = children[1];
-      glyphs.style.display = 'none';
-      knob.style.width = '26px';
-      knob.style.height = '26px';
-      knob.style.transform = 'translateX(0) !important';
+    const glyphs = button.children[0];
+    const knob = button.children[1];
+    if (glyphs) glyphs.classList.add('aspi-theme-old-glyphs');
+    if (knob) {
+      knob.classList.add('aspi-theme-knob');
       knob.classList.remove('translate-x-6', 'translate-x-7');
-      knob.classList.add('rounded-lg');
-      knob.style.boxShadow = 'none';
     }
-  }
-
-  function createFallbackButton() {
-    let holder = document.querySelector('header') || document.querySelector('main') || document.body;
-    const button = document.createElement('button');
-    button.id = BUTTON_ID;
-    button.type = 'button';
-    button.innerHTML = '<i class="fa-solid fa-circle-half-stroke" aria-hidden="true"></i>';
-    button.title = 'লাইট / ডার্ক মোড পরিবর্তন';
-    button.setAttribute('aria-label', 'লাইট / ডার্ক মোড পরিবর্তন');
-    button.addEventListener('click', () => {
-      const app = getApp();
-      if (app && typeof app.toggleTheme === 'function') app.toggleTheme();
-    });
-    Object.assign(button.style, { position:'fixed', top:'14px', right:'150px', zIndex:'80' });
-    holder.appendChild(button);
-    return button;
   }
 
   function boot() {
     injectStyles();
     removeLegacySettingsCard();
-
-    let primary = document.getElementById(BUTTON_ID);
-    if (!primary) primary = findHeaderThemeButton();
-    if (primary) {
-      removeDuplicateThemeButtons(primary);
-      stylePrimaryButton(primary);
-      return true;
-    }
-
-    createFallbackButton();
+    const primary = document.getElementById(BUTTON_ID) || findPrimaryButton();
+    if (!primary) return false;
+    removeDuplicateThemeButtons(primary);
+    stylePrimaryButton(primary);
     return true;
   }
 
   let attempts = 0;
   const timer = setInterval(() => {
     attempts += 1;
-    if (boot() || attempts > 100) clearInterval(timer);
+    if (boot() || attempts > 80) clearInterval(timer);
   }, 150);
 })();
