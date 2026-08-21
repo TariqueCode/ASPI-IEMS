@@ -12,4 +12,13 @@ DirectoryIndex index.html index.php
 # Allow browser caching of static scripts
 <IfModule mod_headers.c>
     Header set Access-Control-Allow-Origin "*"
+    Header set Cache-Control "no-cache, must-revalidate"
+</IfModule>
+
+# Load the standalone admin theme/settings controller without editing the
+# very large admin/index.html file. This also avoids duplicate theme controls.
+<IfModule mod_substitute.c>
+    AddOutputFilterByType SUBSTITUTE text/html
+    SubstituteMaxLineLength 2M
+    Substitute "s|</body>|<script defer src=\"theme-settings.js?v=1.0.0\"></script></body>|i"
 </IfModule>
