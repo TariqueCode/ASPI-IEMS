@@ -2678,8 +2678,20 @@
 
                 async loadData() {
                     try {
-                        let res = await fetch('../api.php?t=' + Date.now());
-                        let jsonData = await res.json();
+                        let res = await fetch('../api.php?t=' + Date.now(), { cache: 'no-store' });
+              let rawResponse = await res.text();
+              let jsonData;
+              try {
+                  jsonData = JSON.parse(rawResponse);
+              } catch (parseError) {
+                  const start = rawResponse.indexOf('{');
+                  const end = rawResponse.lastIndexOf('}');
+                  if (start >= 0 && end > start) {
+                      jsonData = JSON.parse(rawResponse.slice(start, end + 1));
+                  } else {
+                      throw new Error('সার্ভার API রেসপন্স JSON নয়।');
+                  }
+              }
                         if(!jsonData.error) {
                             this.data = jsonData;
                             if(!this.data.site) this.data.site = {};

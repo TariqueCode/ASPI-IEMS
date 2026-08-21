@@ -1,4 +1,8 @@
 <?php
+// ASPI_DISPLAY_ERRORS_DISABLED_V4
+ini_set('display_errors', '0');
+ini_set('display_startup_errors', '0');
+ini_set('log_errors', '1');
 // ASPI_JSON_FATAL_GUARD_V2
 if (!defined('ASPI_JSON_FATAL_GUARD_V2')) {
     define('ASPI_JSON_FATAL_GUARD_V2', true);
@@ -604,6 +608,7 @@ if ($action === 'edu_captcha') {
 
 // Handle Result Verification
 if ($action === 'verify_edu_result') {
+    require_once __DIR__ . '/EducationBoardResult.php';
     $board = $requestParams['board'] ?? '';
     $year = $requestParams['year'] ?? '';
     $roll = trim($requestParams['roll'] ?? '');
@@ -851,10 +856,11 @@ function generateSvgCaptcha($code) {
     return 'data:image/svg+xml;base64,' . base64_encode($svg);
 }
 
-require_once __DIR__ . '/EducationBoardResult.php';
+// EducationBoardResult is loaded only inside the education-board handlers.
 
 // Handle Get Education Board Captcha
 if ($action === 'get_edu_captcha') {
+    require_once __DIR__ . '/EducationBoardResult.php';
     try {
         $engine = new EducationBoardResult();
         $res = $engine->getCaptcha();
