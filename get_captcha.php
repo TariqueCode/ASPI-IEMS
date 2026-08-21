@@ -15,11 +15,6 @@ require_once __DIR__ . '/EducationBoardResult.php';
 
 try {
     $engine = new EducationBoardResult();
-
-    // getCaptchaImage() performs the complete proven bootstrap sequence:
-    // /v2/home -> challenge -> /_challenge-verify -> /v2/home -> /v2/captcha.
-    // Keep all upstream requests inside the engine so private transport
-    // helpers cannot be called from this endpoint.
     $image = $engine->getCaptchaImage();
 
     $mime = 'image/jpeg';
@@ -37,6 +32,7 @@ try {
     echo json_encode([
         'status' => 'success',
         'captcha_image' => 'data:' . $mime . ';base64,' . base64_encode($image),
+        'captcha_generated_at' => time(),
         'message' => 'অফিসিয়াল শিক্ষা বোর্ড ক্যাপচা লোড হয়েছে।'
     ], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $e) {
