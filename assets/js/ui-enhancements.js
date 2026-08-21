@@ -1,4 +1,4 @@
-/* ASPI UI enhancements: adaptive department cards + one formal theme control */
+/* ASPI UI enhancements: adaptive department cards + one formal theme control + mobile theme placement */
 (function () {
   'use strict';
 
@@ -21,6 +21,21 @@
       .dark .aspi-site-theme-formal{background:rgba(15,23,42,.94)!important;color:#facc15!important;border-color:rgba(148,163,184,.22)!important;box-shadow:0 5px 18px rgba(0,0,0,.25)!important}
       .aspi-site-theme-formal .aspi-theme-old-glyphs{display:none!important}
       .aspi-site-theme-formal .aspi-theme-knob{position:static!important;transform:none!important;width:26px!important;height:26px!important;border-radius:8px!important;box-shadow:none!important;}
+
+      /* Mobile menu: keep the theme control below the social links. */
+      @media(max-width:1279px){
+        .aspi-mobile-theme-control{
+          width:100%!important;
+          margin-top:0!important;
+          padding-top:10px!important;
+          border-top:1px solid rgba(148,163,184,.18)!important;
+        }
+        .aspi-mobile-theme-control button{
+          width:100%!important;
+          min-height:42px!important;
+        }
+      }
+
       #departments .aspi-department-grid{display:grid!important;gap:20px!important;align-items:stretch!important;}
       #departments .aspi-department-grid > *{width:100%!important;max-width:none!important;min-width:0!important;}
       @media(min-width:768px){
@@ -35,11 +50,13 @@
     document.head.appendChild(style);
   }
 
+  function isThemeButton(button) {
+    const click = (button.getAttribute('@click') || button.getAttribute('x-on:click') || '').replace(/\s/g, '');
+    return click === 'toggleTheme()';
+  }
+
   function updateThemeButton() {
-    const buttons = Array.from(document.querySelectorAll('button')).filter((button) => {
-      const click = (button.getAttribute('@click') || button.getAttribute('x-on:click') || '').replace(/\s/g, '');
-      return click === 'toggleTheme()';
-    });
+    const buttons = Array.from(document.querySelectorAll('button')).filter(isThemeButton);
     if (!buttons.length) return;
 
     const primary = buttons.find((b) => b.closest('nav') || (b.className || '').includes('hidden xl:flex')) || buttons[0];
@@ -47,7 +64,7 @@
       if (button === primary) return;
       const row = button.closest('.flex.items-center.justify-between');
       if (row && row.querySelectorAll('button').length === 1 && row.textContent.trim().match(/মোড|থিম/)) row.remove();
-      else button.remove();
+      else if (!button.closest('.aspi-mobile-theme-control')) button.remove();
     });
 
     primary.classList.add('aspi-site-theme-formal');
@@ -61,6 +78,33 @@
     if (knob) {
       knob.classList.add('aspi-theme-knob');
       knob.classList.remove('translate-x-6','translate-x-7');
+    }
+  }
+
+  function moveMobileThemeBelowSocial() {
+    const mobileThemeButton = Array.from(document.querySelectorAll('button')).find((button) => {
+      if (!isThemeButton(button)) return false;
+      if (button.closest('nav')) return false;
+      const wrapper = button.closest('div.pt-3');
+      return !!wrapper;
+    });
+    if (!mobileThemeButton) return;
+
+    const wrapper = mobileThemeButton.closest('div.pt-3');
+    if (!wrapper) return;
+    wrapper.classList.add('aspi-mobile-theme-control');
+
+    const mobileMenu = wrapper.parentElement;
+    if (!mobileMenu) return;
+
+    const social = Array.from(mobileMenu.children).find((el) => {
+      if (!(el instanceof HTMLElement)) return false;
+      if (!el.className || !String(el.className).includes('justify-center')) return false;
+      return el.querySelectorAll('a').length >= 4 && el.querySelector('a[href*="wa.me"]');
+    });
+
+    if (social && social !== wrapper && social.nextElementSibling !== wrapper) {
+      social.insertAdjacentElement('afterend', wrapper);
     }
   }
 
@@ -92,6 +136,7 @@
 
   function boot() {
     injectStyles();
+    moveMobileThemeBelowSocial();
     updateThemeButton();
     updateDepartmentGrid();
   }
@@ -100,6 +145,7 @@
   [250,700,1400,2500].forEach((delay) => setTimeout(boot, delay));
 
   const observer = new MutationObserver(() => {
+    moveMobileThemeBelowSocial();
     updateDepartmentGrid();
     updateThemeButton();
   });
