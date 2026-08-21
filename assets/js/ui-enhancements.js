@@ -61,10 +61,10 @@
 
     const primary = buttons.find((b) => b.closest('nav') || (b.className || '').includes('hidden xl:flex')) || buttons[0];
     buttons.forEach((button) => {
-      if (button === primary) return;
+      if (button === primary || button.closest('.aspi-mobile-theme-control')) return;
       const row = button.closest('.flex.items-center.justify-between');
       if (row && row.querySelectorAll('button').length === 1 && row.textContent.trim().match(/মোড|থিম/)) row.remove();
-      else if (!button.closest('.aspi-mobile-theme-control')) button.remove();
+      else button.remove();
     });
 
     primary.classList.add('aspi-site-theme-formal');
