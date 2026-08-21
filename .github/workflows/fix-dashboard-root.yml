@@ -1,0 +1,81 @@
+name: Fix dashboard root cause
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Patch API dependency order and admin JSON parser
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          # API: never load the Education Board engine for the normal dashboard GET.
+          p = Path('api.php')
+          s = p.read_text(encoding='utf-8')
+          s = s.replace("require_once __DIR__ . '/EducationBoardResult.php';\n\n// Handle Get Education Board Captcha", "// EducationBoardResult is loaded only inside the education-board handlers.\n\n// Handle Get Education Board Captcha", 1)
+          s = s.replace("if ($action === 'get_edu_captcha') {\n    try {\n        $engine = new EducationBoardResult();", "if ($action === 'get_edu_captcha') {\n    require_once __DIR__ . '/EducationBoardResult.php';\n    try {\n        $engine = new EducationBoardResult();", 1)
+          s = s.replace("if ($action === 'verify_edu_result') {\n    $board =", "if ($action === 'verify_edu_result') {\n    require_once __DIR__ . '/EducationBoardResult.php';\n    $board =", 1)
+          if "ASPI_DISPLAY_ERRORS_DISABLED_V4" not in s:
+              marker = "<?php\n"
+              prefix = "<?php\n// ASPI_DISPLAY_ERRORS_DISABLED_V4\nini_set('display_errors', '0');\nini_set('display_startup_errors', '0');\nini_set('log_errors', '1');\n"
+              if s.startswith(marker):
+                  s = prefix + s[len(marker):]
+          p.write_text(s, encoding='utf-8')
+
+          # Admin: make the initial data request tolerant of PHP HTML/error output.
+          p = Path('admin/index.html')
+          s = p.read_text(encoding='utf-8')
+          old = "let res = await fetch('../api.php?t=' + Date.now());\n                        let jsonData = await res.json();"
+          new = """let res = await fetch('../api.php?t=' + Date.now(), { cache: 'no-store' });
+                        let rawResponse = await res.text();
+                        let jsonData;
+                        try {
+                            jsonData = JSON.parse(rawResponse);
+                        } catch (parseError) {
+                            const start = rawResponse.indexOf('{');
+                            const end = rawResponse.lastIndexOf('}');
+                            if (start >= 0 && end > start) {
+                                jsonData = JSON.parse(rawResponse.slice(start, end + 1));
+                            } else {
+                                throw new Error('সার্ভার API রেসপন্স JSON নয়।');
+                            }
+                        }"""
+          if old in s:
+              s = s.replace(old, new, 1)
+          else:
+              s = re.sub(r"let res = await fetch\('\.\./api\.php\?t=' \+ Date\.now\(\)\);\s*let jsonData = await res\.json\(\);", new.strip(), s, count=1)
+          p.write_text(s, encoding='utf-8')
+
+          print('Root-cause dashboard patch applied.')
+          PY
+
+      - name: Validate PHP
+        run: php -l api.php
+
+      - name: Commit fix
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add api.php admin/index.html
+          if git diff --cached --quiet; then
+            echo "No changes needed"
+            exit 0
+          fi
+          git commit -m "Fix dashboard API dependency order and JSON parsing"
+          git push
