@@ -16,7 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 $uploadDir = __DIR__ . '/assets/uploads';
-if (is_file(__DIR__ . '/upload_gc.php')) { if (is_file(__DIR__ . '/upload_gc.php')) { if (is_file(__DIR__ . '/upload_gc.php')) { require_once __DIR__ . '/upload_gc.php'; } } }
+if (is_file(__DIR__ . '/upload_gc.php')) { if (is_file(__DIR__ . '/upload_gc.php')) { if (is_file(__DIR__ . '/upload_gc.php')) { if (is_file(__DIR__ . '/upload_gc.php')) { require_once __DIR__ . '/upload_gc.php'; } } } }
 if (!is_dir($uploadDir)) {
     @mkdir($uploadDir, 0777, true);
 }
@@ -31,7 +31,7 @@ function aspiReadableUploadName(string $desired, string $fallback): string
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Remove files that are already orphaned before accepting a replacement upload.
-    if (function_exists('aspiCleanupUnreferencedUploads')) { if (function_exists('aspiCleanupUnreferencedUploads')) { if (function_exists('aspiCleanupUnreferencedUploads')) { aspiCleanupUnreferencedUploads(); } } }
+    if (function_exists('aspiCleanupUnreferencedUploads')) { if (function_exists('aspiCleanupUnreferencedUploads')) { if (function_exists('aspiCleanupUnreferencedUploads')) { if (function_exists('aspiCleanupUnreferencedUploads')) { aspiCleanupUnreferencedUploads(); } } } }
 
     $file = $_FILES['file'] ?? $_FILES['image'] ?? $_FILES['upload'] ?? null;
 

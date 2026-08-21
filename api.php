@@ -30,7 +30,7 @@ $dataDir = $baseDir . '/data';
 $uploadDir = $baseDir . '/assets/uploads';
 
 // ASPI_UPLOAD_GC_ENABLED_V1
-if (is_file(__DIR__ . '/upload_gc.php')) { if (is_file(__DIR__ . '/upload_gc.php')) { if (is_file(__DIR__ . '/upload_gc.php')) { require_once __DIR__ . '/upload_gc.php'; } } }
+if (is_file(__DIR__ . '/upload_gc.php')) { if (is_file(__DIR__ . '/upload_gc.php')) { if (is_file(__DIR__ . '/upload_gc.php')) { if (is_file(__DIR__ . '/upload_gc.php')) { require_once __DIR__ . '/upload_gc.php'; } } } }
 $dbFile = $dataDir . '/db.json';
 $mysqlConfigFile = $dataDir . '/mysql-config.json';
 
