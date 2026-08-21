@@ -1,0 +1,32 @@
+:root{--aspi-fast-ease:cubic-bezier(.2,.7,.2,1)}
+html{scroll-behavior:smooth}
+body{-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+button,a,select,input,textarea{touch-action:manipulation}
+button,a{cursor:pointer}
+img{content-visibility:auto}
+
+/* Keep expensive glass effects subtle so scrolling stays GPU-friendly. */
+.glass-card,.glass-nav{backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.ambient-glow{filter:blur(70px);opacity:.08;will-change:transform}
+.dark .ambient-glow{opacity:.18}
+
+/* Avoid animating large layers when the device is not idle. */
+@media (max-width:900px){
+  .ambient-glow{display:none!important}
+  .glass-card,.glass-nav{backdrop-filter:none;-webkit-backdrop-filter:none}
+}
+
+/* Fast, professional interaction feedback. */
+button:not(:disabled),a{transition:transform .12s var(--aspi-fast-ease),box-shadow .12s var(--aspi-fast-ease),background-color .12s var(--aspi-fast-ease),border-color .12s var(--aspi-fast-ease)}
+button:not(:disabled):active,a:active{transform:translateY(1px)}
+
+/* Lazy sections are painted only when they approach the viewport. */
+.aspi-lazy-section{content-visibility:auto;contain-intrinsic-size:800px}
+
+/* Respect accessibility and save CPU on users who prefer reduced motion. */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}
+}
+
+/* Prevent broken image icons from disturbing layout. */
+img[src=""],img:not([src]){visibility:hidden}
