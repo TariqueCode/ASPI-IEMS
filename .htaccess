@@ -32,6 +32,15 @@ DirectoryIndex index.html index.php
     AddOutputFilterByType DEFLATE text/html text/plain text/css text/javascript application/javascript application/json application/xml image/svg+xml application/wasm font/ttf font/otf
 </IfModule>
 
+# Inject the lightweight performance layer into the existing static index
+# without requiring a manual edit of the large index.html file.
+<IfModule mod_substitute.c>
+    AddOutputFilterByType SUBSTITUTE text/html
+    SubstituteMaxLineLength 10M
+    Substitute "s|</head>|<link rel=\"stylesheet\" href=\"assets/css/performance.css?v=1.0.1\"><link rel=\"preconnect\" href=\"https://cdnjs.cloudflare.com\" crossorigin></head>|i"
+    Substitute "s|</body>|<script defer src=\"assets/js/performance.js?v=1.0.1\"></script></body>|i"
+</IfModule>
+
 # Browser caching for static assets. HTML/JSON remain revalidated so dashboard changes show quickly.
 <IfModule mod_expires.c>
     ExpiresActive On
