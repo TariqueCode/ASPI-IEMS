@@ -1,0 +1,127 @@
+name: Final dashboard JSON hardening
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Harden PHP API output and admin JSON parsing
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          # ------------------------------------------------------------
+          # api.php: PHP warnings/notices must never leak HTML into JSON.
+          # Fatal errors are already handled by the existing JSON guard.
+          # ------------------------------------------------------------
+          p = Path('api.php')
+          s = p.read_text(encoding='utf-8')
+
+          production = """<?php
+// ASPI_PRODUCTION_API_OUTPUT_V1
+ini_set('display_errors', '0');
+ini_set('display_startup_errors', '0');
+ini_set('log_errors', '1');
+error_reporting(E_ALL);
+"""
+
+          if 'ASPI_PRODUCTION_API_OUTPUT_V1' not in s:
+              if not s.startswith('<?php'):
+                  raise SystemExit('api.php does not start with <?php')
+              s = production + s[len('<?php'):]
+
+          # Normalize any accidental nested upload_gc guards to one clean guard.
+          s = re.sub(
+              r"// ASPI_UPLOAD_GC_ENABLED_V1\s*if\s*\(is_file\(__DIR__\s*\.\s*'/upload_gc\.php'\)\)\s*\{(?:\s*if\s*\(is_file\(__DIR__\s*\.\s*'/upload_gc\.php'\)\)\s*\{)+\s*require_once\s+__DIR__\s*\.\s*'/upload_gc\.php';\s*\}(?:\s*\})+",
+              "// ASPI_UPLOAD_GC_ENABLED_V1\nif (is_file(__DIR__ . '/upload_gc.php')) { require_once __DIR__ . '/upload_gc.php'; }",
+              s,
+              count=1,
+          )
+
+          p.write_text(s, encoding='utf-8')
+
+          # ------------------------------------------------------------
+          # admin/index.html: do not let a stray PHP warning break JSON.
+          # Parse the response as text and recover the JSON object when a
+          # server inserts harmless HTML before/after it.
+          # ------------------------------------------------------------
+          p = Path('admin/index.html')
+          s = p.read_text(encoding='utf-8')
+
+          old = """                        let res = await fetch('../api.php?t=' + Date.now());
+                        let jsonData = await res.json();"""
+          new = """                        let res = await fetch('../api.php?t=' + Date.now(), { cache: 'no-store' });
+                        let rawResponse = await res.text();
+                        let jsonData;
+                        try {
+                            jsonData = JSON.parse(rawResponse);
+                        } catch (parseError) {
+                            const start = rawResponse.indexOf('{');
+                            const end = rawResponse.lastIndexOf('}');
+                            if (start >= 0 && end > start) {
+                                try {
+                                    jsonData = JSON.parse(rawResponse.slice(start, end + 1));
+                                } catch (recoveryError) {
+                                    throw new Error('সার্ভার রেসপন্স সঠিক JSON নয়।');
+                                }
+                            } else {
+                                throw new Error('সার্ভার থেকে JSON রেসপন্স পাওয়া যায়নি।');
+                            }
+                        }"""
+
+          if old in s:
+              s = s.replace(old, new, 1)
+          else:
+              print('loadData JSON block already patched or not found')
+
+          # saveData: use the same tolerant JSON parser.
+          old2 = """                        let result = await res.json();"""
+          new2 = """                        let saveRaw = await res.text();
+                        let result;
+                        try {
+                            result = JSON.parse(saveRaw);
+                        } catch (parseError) {
+                            const start = saveRaw.indexOf('{');
+                            const end = saveRaw.lastIndexOf('}');
+                            if (start >= 0 && end > start) {
+                                result = JSON.parse(saveRaw.slice(start, end + 1));
+                            } else {
+                                throw new Error('সার্ভার থেকে JSON রেসপন্স পাওয়া যায়নি।');
+                            }
+                        }"""
+          if old2 in s:
+              s = s.replace(old2, new2, 1)
+
+          p.write_text(s, encoding='utf-8')
+          print('Dashboard/API hardening applied.')
+          PY
+
+      - name: Validate PHP
+        run: php -l api.php
+
+      - name: Commit
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add api.php admin/index.html
+          if git diff --cached --quiet; then
+            echo "No changes needed."
+            exit 0
+          fi
+          git commit -m "Harden dashboard API JSON handling"
+          git push
