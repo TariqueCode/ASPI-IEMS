@@ -23,11 +23,11 @@
     return alt.includes('aspi logo') || alt === 'aspi' || srcExpr.includes('data.site.logo') || id.includes('logo') || cls.includes('logo');
   }
 
-  function setLogoSource(img, force = false) {
+  function setLogoSource(img) {
     if (!isLogoElement(img)) return;
     const current = img.getAttribute('src') || '';
     const bad = !current || current === 'undefined' || current === 'null' || current === 'about:blank';
-    if (force || bad) img.setAttribute('src', immediateUrl());
+    if (bad) img.setAttribute('src', immediateUrl());
 
     if (!img.dataset.aspiLogoFallbackBound) {
       img.dataset.aspiLogoFallbackBound = '1';
@@ -67,7 +67,9 @@
           if (node.nodeType === 1) primeLogoImages(node);
         });
       }
-      if (mutation.type === 'attributes') setLogoSource(mutation.target, true);
+      if (mutation.type === 'attributes' && mutation.attributeName === 'src') {
+        setLogoSource(mutation.target);
+      }
     }
   });
 
@@ -76,7 +78,7 @@
       childList: true,
       subtree: true,
       attributes: true,
-      attributeFilter: ['src', ':src', 'x-bind:src']
+      attributeFilter: ['src']
     });
   }
 })();
