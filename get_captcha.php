@@ -16,10 +16,10 @@ require_once __DIR__ . '/EducationBoardResult.php';
 try {
     $engine = new EducationBoardResult();
 
-    // Keep the exact bootstrap sequence used by the supplied successful
-    // project. The upstream cookie jar must remain the same for all calls.
-    $engine->solveChallenge();
-    $engine->get($engine->getBaseUrl() . '/v2/home');
+    // getCaptchaImage() performs the complete proven bootstrap sequence:
+    // /v2/home -> challenge -> /_challenge-verify -> /v2/home -> /v2/captcha.
+    // Keep all upstream requests inside the engine so private transport
+    // helpers cannot be called from this endpoint.
     $image = $engine->getCaptchaImage();
 
     $mime = 'image/jpeg';
