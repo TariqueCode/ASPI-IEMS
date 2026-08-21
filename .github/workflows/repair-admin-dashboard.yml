@@ -1,0 +1,89 @@
+name: Repair admin dashboard safely
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'admin/index.html'
+      - 'admin/theme-settings.js'
+      - '.github/workflows/repair-admin-dashboard.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Repair admin HTML loading and keep one theme toggle
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+
+          path = Path('admin/index.html')
+          html = path.read_text(encoding='utf-8')
+
+          # Remove any theme-settings script that may have been inserted inside
+          # a JavaScript template string by the old mod_substitute approach.
+          html = re.sub(
+              r'<script\s+defer\s+src=["\']theme-settings\.js[^>]*></script>',
+              '',
+              html,
+              flags=re.I,
+          )
+
+          # Remove duplicate theme controls from sidebar and profile modal.
+          html = re.sub(
+              r'(?s)\s*<!-- Theme Mode Toggle Row in Sidebar.*?</div>\s*\n\s*<div class="flex items-center justify-between text-\[11px\]',
+              '\n                <div class="flex items-center justify-between text-[11px]',
+              html,
+              count=1,
+          )
+
+          html = re.sub(
+              r'(?s)\s*<!-- Theme Toggle Button -->\s*<button[^>]*@click="toggleTheme\(\)"[^>]*>.*?</button>',
+              '',
+              html,
+              count=1,
+          )
+
+          # Ensure the standalone controller is loaded directly from the page,
+          # never via Apache HTML rewriting.
+          tag = '<script defer src="theme-settings.js?v=2.1.0"></script>'
+          if tag not in html:
+              html = html.replace('</head>', tag + '\n</head>', 1)
+
+          # Sanity check: exactly one template-level theme toggle remains.
+          count = len(re.findall(r'@click="toggleTheme\(\)"', html))
+          if count != 1:
+              raise SystemExit(f'Expected exactly one theme toggle, found {count}')
+
+          path.write_text(html, encoding='utf-8')
+
+      - name: Verify no unsafe server-side substitution remains
+        shell: python
+        run: |
+          from pathlib import Path
+          ht = Path('admin/.htaccess').read_text(encoding='utf-8')
+          html = Path('admin/index.html').read_text(encoding='utf-8')
+          if 'mod_substitute.c' in ht or 'Substitute ' in ht:
+              raise SystemExit('Unsafe mod_substitute rule still exists in admin/.htaccess')
+          if 'theme-settings.js?v=2.1.0' not in html:
+              raise SystemExit('Standalone theme controller is not loaded')
+          print('Admin crash repair verified')
+
+      - name: Commit repair
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add admin/index.html admin/.htaccess
+          if git diff --cached --quiet; then
+            echo "No changes needed"
+            exit 0
+          fi
+          git commit -m "Fix admin dashboard crash and keep one theme control"
+          git push
