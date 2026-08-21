@@ -6,6 +6,8 @@ on:
     paths:
       - 'admin/index.html'
       - 'admin/theme-settings.js'
+      - 'index.html'
+      - 'founder.html'
       - '.github/workflows/repair-admin-dashboard.yml'
 
 permissions:
@@ -51,6 +53,15 @@ jobs:
               count=1,
           )
 
+          # Remove the visible default admin username/password and hosting guide
+          # block from the login screen. Authentication logic remains unchanged.
+          html = re.sub(
+              r'(?s)\s*<!-- Default Credentials Note -->.*?(?=\s*<!-- Hosting & Database Connection Guide Modal -->)',
+              '',
+              html,
+              count=1,
+          )
+
           # Ensure the standalone controller is loaded directly from the page,
           # never via Apache HTML rewriting.
           tag = '<script defer src="theme-settings.js?v=2.1.0"></script>'
@@ -64,26 +75,52 @@ jobs:
 
           path.write_text(html, encoding='utf-8')
 
-      - name: Verify no unsafe server-side substitution remains
+      - name: Remove default founder image fallbacks
         shell: python
         run: |
           from pathlib import Path
-          ht = Path('admin/.htaccess').read_text(encoding='utf-8')
-          html = Path('admin/index.html').read_text(encoding='utf-8')
-          if 'mod_substitute.c' in ht or 'Substitute ' in ht:
-              raise SystemExit('Unsafe mod_substitute rule still exists in admin/.htaccess')
-          if 'theme-settings.js?v=2.1.0' not in html:
+
+          replacements = {
+              Path('index.html'): (
+                  '<img :src="data.site.founder?.image_url || \'assets/uploads/1786632160_7795.jpg\'" \n                                     @error="$el.src = \'assets/uploads/1786632160_7795.jpg\'"',
+                  '<img x-show="data.site.founder?.image_url" :src="data.site.founder?.image_url"',
+              ),
+              Path('founder.html'): (
+                  '<img :src="data.site.founder?.image_url || \'assets/uploads/1786632189_4076.jpg\'" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">',
+                  '<img x-show="data.site.founder?.image_url" :src="data.site.founder?.image_url" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">',
+              ),
+          }
+
+          for path, (old, new) in replacements.items():
+              html = path.read_text(encoding='utf-8')
+              if old not in html:
+                  raise SystemExit(f'Expected founder image fallback not found in {path}')
+              path.write_text(html.replace(old, new, 1), encoding='utf-8')
+
+      - name: Verify requested cleanup
+        shell: python
+        run: |
+          from pathlib import Path
+          admin = Path('admin/index.html').read_text(encoding='utf-8')
+          home = Path('index.html').read_text(encoding='utf-8')
+          founder = Path('founder.html').read_text(encoding='utf-8')
+
+          if 'ডিফল্ট এডমিন লগইন তথ্য' in admin or '#Tarique-1998' in admin:
+              raise SystemExit('Default admin credentials are still visible')
+          if "1786632160_7795.jpg'" in home or "1786632189_4076.jpg'" in founder:
+              raise SystemExit('Founder image fallback is still present')
+          if 'theme-settings.js?v=2.1.0' not in admin:
               raise SystemExit('Standalone theme controller is not loaded')
-          print('Admin crash repair verified')
+          print('Requested cleanup verified')
 
       - name: Commit repair
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add admin/index.html admin/.htaccess
+          git add admin/index.html admin/.htaccess index.html founder.html
           if git diff --cached --quiet; then
             echo "No changes needed"
             exit 0
           fi
-          git commit -m "Fix admin dashboard crash and keep one theme control"
+          git commit -m "Remove default credentials and founder image fallbacks"
           git push
