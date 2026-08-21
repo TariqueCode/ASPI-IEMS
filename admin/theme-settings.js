@@ -121,6 +121,20 @@
     if (card) card.remove();
   }
 
+  function removeDefaultLoginInfo() {
+    const marker = 'ডিফল্ট এডমিন লগইন তথ্য';
+    const password = '#Tarique-1998';
+    const blocks = Array.from(document.querySelectorAll('div')).filter((el) => {
+      const text = el.textContent || '';
+      return text.includes(marker) && text.includes(password);
+    });
+    blocks.forEach((block) => {
+      const wrapper = block.closest('.mt-6.pt-4') || block.parentElement;
+      if (wrapper) wrapper.remove();
+      else block.remove();
+    });
+  }
+
   function findPrimaryButton() {
     const buttons = Array.from(document.querySelectorAll('button')).filter(isThemeButton);
     return buttons.find((b) => b.closest('header')) || buttons[0] || null;
@@ -161,6 +175,7 @@
   function boot() {
     injectStyles();
     removeLegacySettingsCard();
+    removeDefaultLoginInfo();
 
     const header = findHeader();
     if (!header) return false;
