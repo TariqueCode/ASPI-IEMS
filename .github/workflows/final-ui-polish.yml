@@ -1,0 +1,70 @@
+name: Final UI polish
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'assets/js/ui-enhancements.js'
+      - 'admin/theme-settings.js'
+      - '.github/workflows/final-ui-polish.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Inject frontend enhancement scripts
+        shell: python
+        run: |
+          from pathlib import Path
+
+          # Main website
+          p = Path('index.html')
+          html = p.read_text(encoding='utf-8')
+          tag = '<script defer src="assets/js/ui-enhancements.js?v=1.0.0"></script>'
+          if tag not in html:
+              html = html.replace('</body>', tag + '\n</body>', 1)
+          p.write_text(html, encoding='utf-8')
+
+          # Admin dashboard
+          p = Path('admin/index.html')
+          html = p.read_text(encoding='utf-8')
+          tag = '<script defer src="theme-settings.js?v=2.0.0"></script>'
+          if tag not in html:
+              html = html.replace('</body>', tag + '\n</body>', 1)
+          p.write_text(html, encoding='utf-8')
+
+      - name: Verify
+        shell: python
+        run: |
+          from pathlib import Path
+          root = Path('index.html').read_text(encoding='utf-8')
+          admin = Path('admin/index.html').read_text(encoding='utf-8')
+          assert 'ui-enhancements.js?v=1.0.0' in root
+          assert 'theme-settings.js?v=2.0.0' in admin
+          print('UI enhancement scripts injected successfully')
+
+      - name: Commit deployment patch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html admin/index.html
+          if git diff --cached --quiet; then
+            echo "No changes needed"
+            exit 0
+          fi
+          git commit -m "Apply adaptive departments and single theme controls"
+          git push
+
+      - name: Remove one-time workflow
+        run: |
+          git rm .github/workflows/final-ui-polish.yml || true
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Remove one-time UI polish workflow" || true
+          git push || true
