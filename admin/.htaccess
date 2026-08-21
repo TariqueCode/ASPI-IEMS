@@ -15,10 +15,8 @@ DirectoryIndex index.html index.php
     Header set Cache-Control "no-cache, must-revalidate"
 </IfModule>
 
-# Load the standalone admin theme/settings controller without editing the
-# very large admin/index.html file. This also avoids duplicate theme controls.
-<IfModule mod_substitute.c>
-    AddOutputFilterByType SUBSTITUTE text/html
-    SubstituteMaxLineLength 2M
-    Substitute "s|</body>|<script defer src=\"theme-settings.js?v=1.0.0\"></script></body>|i"
-</IfModule>
+# IMPORTANT:
+# Do not use mod_substitute here. Injecting a <script> tag into HTML can also
+# replace literal </body> text inside JavaScript template strings, which can
+# terminate inline <script> blocks and crash the entire admin dashboard.
+# theme-settings.js is loaded directly by admin/index.html instead.
