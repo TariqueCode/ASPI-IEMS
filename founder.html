@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>প্রতিষ্ঠাতা পরিচিতি - মরহুম আলহাজ্ব সিরাজুল ইসলাম | আসহাব সিরাজ পলিটেকনিক ইনস্টিটিউট</title>
-    <link rel="icon" type="image/png" href="assets/uploads/1787121756078_5353.png">
+    <link rel="icon" type="image/png" href="">
     
     <script>
         // Compatibility shim for iframe environments where window.fetch is a getter-only property
@@ -80,7 +80,7 @@
         }
     </script>
     <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.9/dist/cdn.min.js"></script>
 
     <style>
         :root { --dynamic-font: 'Hind Siliguri'; }
@@ -221,8 +221,8 @@
             <a href="index.html" class="flex items-center space-x-2.5 sm:space-x-3.5 cursor-pointer shrink-0 group">
                 <!-- Pure Large Logo without Box/Border -->
                 <div class="h-11 sm:h-13 lg:h-16 xl:h-20 w-auto flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform duration-300">
-                    <img :src="data.site.logo || 'assets/uploads/1787121756078_5353.png'" 
-                         @error="$el.src = $el.src.includes('ASPI-Logo.png') ? '' : 'assets/uploads/ASPI-Logo.png'" 
+                    <img :src="data.site.logo || ''" 
+                         @error="$el.src = $el.src.includes('ASPI-Logo.png') ? '' : ''" 
                          class="h-full w-auto max-h-11 sm:max-h-13 lg:max-h-16 xl:max-h-20 object-contain drop-shadow-[0_2px_8px_rgba(0,0,0,0.15)] dark:drop-shadow-[0_2px_10px_rgba(255,255,255,0.2)]" 
                          alt="ASPI Logo">
                 </div>
@@ -506,8 +506,8 @@
             <div>
                 <div class="flex items-center space-x-3 mb-4">
                     <div class="w-12 h-12 rounded-2xl bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 flex items-center justify-center shadow-md overflow-hidden shrink-0">
-                        <img :src="data.site.logo || 'assets/uploads/1787121756078_5353.png'" 
-                             @error="$el.src = $el.src.includes('ASPI-Logo.png') ? '' : 'assets/uploads/ASPI-Logo.png'" 
+                        <img :src="data.site.logo || ''" 
+                             @error="$el.src = $el.src.includes('ASPI-Logo.png') ? '' : ''" 
                              class="w-full h-full object-contain p-1" 
                              alt="ASPI Logo">
                     </div>

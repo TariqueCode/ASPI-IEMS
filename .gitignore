@@ -1,0 +1,6 @@
+# Live-host runtime files
+data/mysql-config.json
+error_log
+cookies/*.txt
+assets/uploads/*
+!assets/uploads/.gitkeep
