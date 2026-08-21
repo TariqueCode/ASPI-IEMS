@@ -17,65 +17,58 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Make api.php JSON-safe
+      - name: Normalize and harden api.php
         shell: bash
         run: |
           python3 - <<'PY'
           from pathlib import Path
+          import re
 
           p = Path('api.php')
           s = p.read_text(encoding='utf-8')
 
-          marker = "<?php\n"
-          guard = r'''<?php
-// ASPI_JSON_FATAL_GUARD_V1
-// Never let PHP fatal errors leak HTML into an API response.
-if (!defined('ASPI_JSON_FATAL_GUARD_V1')) {
-    define('ASPI_JSON_FATAL_GUARD_V1', true);
-    ob_start();
-    register_shutdown_function(function () {
-        $error = error_get_last();
-        if (!$error) {
-            return;
-        }
-        $fatalTypes = [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR, E_USER_ERROR];
-        if (!in_array($error['type'], $fatalTypes, true)) {
-            return;
-        }
-        while (ob_get_level() > 0) {
-            ob_end_clean();
-        }
-        http_response_code(500);
-        header('Content-Type: application/json; charset=utf-8');
-        echo json_encode([
-            'status' => 'error',
-            'message' => 'সার্ভারে API ত্রুটি ঘটেছে।',
-            'error_type' => (int)$error['type'],
-            'error_file' => basename((string)$error['file']),
-            'error_line' => (int)$error['line']
-        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-    });
-}
-'''
+          guard = r'''// ASPI_JSON_FATAL_GUARD_V2
+          if (!defined('ASPI_JSON_FATAL_GUARD_V2')) {
+              define('ASPI_JSON_FATAL_GUARD_V2', true);
+              ob_start();
+              register_shutdown_function(function () {
+                  $error = error_get_last();
+                  if (!$error) return;
+                  $fatalTypes = [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR, E_USER_ERROR];
+                  if (!in_array($error['type'], $fatalTypes, true)) return;
+                  while (ob_get_level() > 0) @ob_end_clean();
+                  http_response_code(500);
+                  header('Content-Type: application/json; charset=utf-8');
+                  echo json_encode([
+                      'status' => 'error',
+                      'message' => 'সার্ভারে API ত্রুটি ঘটেছে।',
+                      'error_type' => (int)$error['type'],
+                      'error_file' => basename((string)$error['file']),
+                      'error_line' => (int)$error['line']
+                  ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+              });
+          }
+          '''
 
-          if 'ASPI_JSON_FATAL_GUARD_V1' not in s:
-              if not s.startswith(marker):
+          if 'ASPI_JSON_FATAL_GUARD_V2' not in s:
+              if not s.startswith('<?php'):
                   raise SystemExit('api.php does not start with <?php')
-              s = guard + s[len(marker):]
+              s = s.replace('<?php\n', '<?php\n' + guard, 1)
 
-          # Keep upload GC optional so a missing helper never kills every API request.
-          old = "require_once __DIR__ . '/upload_gc.php';"
-          new = "if (is_file(__DIR__ . '/upload_gc.php')) { require_once __DIR__ . '/upload_gc.php'; }"
-          s = s.replace(old, new)
+          # Collapse all nested/duplicate upload_gc guards to one safe include.
+          pattern = r"\s*// ASPI_UPLOAD_GC_ENABLED_V1\s*\n\s*(?:if \(is_file\(__DIR__ \. '/upload_gc\.php'\)\) \{\s*)+require_once __DIR__ \. '/upload_gc\.php';(?:\s*\}\s*)+"
+          replacement = "\n// ASPI_UPLOAD_GC_ENABLED_V1\nif (is_file(__DIR__ . '/upload_gc.php')) { require_once __DIR__ . '/upload_gc.php'; }\n"
+          s, count = re.subn(pattern, replacement, s, count=1)
+          if count == 0 and 'upload_gc.php' in s:
+              s = re.sub(r"\s*// ASPI_UPLOAD_GC_ENABLED_V1.*?\n(?=\$dbFile)", replacement, s, flags=re.S, count=1)
 
           p.write_text(s, encoding='utf-8')
-          print('api.php JSON guard applied.')
           PY
 
       - name: Validate PHP syntax
         run: php -l api.php
 
-      - name: Commit changes
+      - name: Commit hardened API
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
@@ -85,5 +78,5 @@ if (!defined('ASPI_JSON_FATAL_GUARD_V1')) {
             echo "No API changes needed."
             exit 0
           fi
-          git commit -m "Make API responses JSON-safe"
+          git commit -m "Harden API JSON output and normalize upload helper"
           git push
