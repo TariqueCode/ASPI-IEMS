@@ -3,12 +3,11 @@
 /**
  * Education Board Result Engine
  *
- * Uses the proven working flow from the supplied successful project:
- *   1) Use one persistent upstream cookie jar.
- *   2) GET /v2/home and solve the anti-bot challenge when present.
- *   3) GET /v2/home again with the same cookies.
- *   4) GET /v2/captcha with the same cookies.
- *   5) POST /v2/getres with the same cookies; do not recreate the session.
+ * Uses one persistent upstream cookie jar and the official site's flow:
+ *   1) GET /v2/home and solve anti-bot challenge when present.
+ *   2) GET /v2/home again with the same cookies.
+ *   3) GET /v2/captcha with the same cookies.
+ *   4) POST /v2/getres with the same cookies.
  */
 class EducationBoardResult {
     private $baseUrl = 'https://www.educationboardresults.gov.bd';
@@ -21,7 +20,6 @@ class EducationBoardResult {
             @mkdir($cookieDir, 0777, true);
         }
 
-        // The supplied successful project uses one persistent upstream jar.
         $this->cookieFile = $cookieDir . '/edu_board_cookies.txt';
         if (!file_exists($this->cookieFile)) {
             @touch($this->cookieFile);
@@ -43,8 +41,8 @@ class EducationBoardResult {
             CURLOPT_MAXREDIRS => 5,
             CURLOPT_COOKIEFILE => $this->cookieFile,
             CURLOPT_COOKIEJAR => $this->cookieFile,
-            CURLOPT_SSL_VERIFYPEER => false,
-            CURLOPT_SSL_VERIFYHOST => false,
+            CURLOPT_SSL_VERIFYPEER => true,
+            CURLOPT_SSL_VERIFYHOST => 2,
             CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
             CURLOPT_HEADER => false,
             CURLOPT_ENCODING => '',
@@ -176,6 +174,25 @@ class EducationBoardResult {
         }
 
         return $captcha;
+    }
+
+    /**
+     * Backward-compatible API wrapper used by api.php?action=get_edu_captcha.
+     * Returns the JSON shape expected by the admission form.
+     */
+    public function getCaptcha() {
+        $captcha = $this->getCaptchaImage();
+
+        // The upstream Content-Type is not currently exposed by get(); PNG is
+        // the common format, while the signature check above also accepts GIF,
+        // JPEG and SVG. Use PNG unless the payload carries an explicit SVG tag.
+        $mime = (strpos(substr($captcha, 0, 64), '<svg') !== false) ? 'image/svg+xml' : 'image/png';
+
+        return [
+            'status' => 'success',
+            'captcha_image' => 'data:' . $mime . ';base64,' . base64_encode($captcha),
+            'message' => 'অফিসিয়াল শিক্ষা বোর্ড ক্যাপচা লোড হয়েছে।'
+        ];
     }
 
     public function fetchResult($board, $year, $roll, $registration, $captcha, $exam = 'ssc') {
