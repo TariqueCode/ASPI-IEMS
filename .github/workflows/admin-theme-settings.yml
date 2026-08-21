@@ -29,130 +29,77 @@ jobs:
               print('Patch already applied')
               raise SystemExit(0)
 
-          # 1) Remove all old quick theme toggle buttons from header/sidebar.
           html = re.sub(r'(?s)\s*<!-- Single Graphical Theme Mode Switcher in Header \(Desktop only\) -->.*?</button>', '', html, count=1)
           html = re.sub(r'(?s)\s*<!-- Theme Toggle Button -->\s*<button[^>]*@click="toggleTheme\(\)".*?</button>', '', html, count=1)
           html = re.sub(r'(?s)<div class="flex items-center justify-between p-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xs">\s*<span.*?</span>\s*<button[^>]*@click="toggleTheme\(\)".*?</button>\s*</div>', '', html, count=1)
-
-          # Fallback: remove any remaining toggleTheme() button not inside the new settings block.
           html = re.sub(r'(?s)<button[^>]*@click="toggleTheme\(\)"[^>]*>.*?</button>', '', html)
 
-          # 2) Add a formal Appearance/Theme settings card to the existing Settings tab.
-          settings_marker = '<!-- ASPI ADMIN THEME SETTINGS PATCH -->'
           settings_card = r'''
 <!-- ASPI ADMIN THEME SETTINGS PATCH -->
 <div class="mb-6 bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
-    <div class="px-5 sm:px-6 py-5 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between gap-4">
-        <div>
-            <h2 class="text-lg sm:text-xl font-black text-slate-900 dark:text-white flex items-center">
-                <span class="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-300 flex items-center justify-center mr-3">
-                    <i class="fa-solid fa-palette"></i>
-                </span>
-                ইন্টারফেস ও থিম
-            </h2>
-            <p class="text-xs text-slate-500 dark:text-slate-400 font-semibold mt-1 ml-[52px]">এডমিন ড্যাশবোর্ডের Light / Dark / System theme এখান থেকে নিয়ন্ত্রণ করুন।</p>
-        </div>
-        <span class="hidden sm:inline-flex items-center px-3 py-1.5 rounded-full text-[11px] font-black bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300">
-            <i class="fa-solid fa-sliders mr-1.5"></i> Interface
-        </span>
+  <div class="px-5 sm:px-6 py-5 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between gap-4">
+    <div>
+      <h2 class="text-lg sm:text-xl font-black text-slate-900 dark:text-white flex items-center">
+        <span class="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-300 flex items-center justify-center mr-3"><i class="fa-solid fa-palette"></i></span>
+        ইন্টারফেস ও থিম
+      </h2>
+      <p class="text-xs text-slate-500 dark:text-slate-400 font-semibold mt-1 ml-[52px]">এডমিন ড্যাশবোর্ডের Light, Dark বা System theme এখান থেকে নিয়ন্ত্রণ করুন।</p>
     </div>
-
-    <div class="p-5 sm:p-6">
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            <button type="button" @click="setThemeMode('light')"
-                    class="group text-left rounded-2xl border p-4 transition-all"
-                    :class="themeMode === 'light' ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-950/40 shadow-md shadow-indigo-500/10' : 'border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-slate-500 bg-slate-50/70 dark:bg-slate-900/40'">
-                <div class="flex items-center justify-between mb-3">
-                    <span class="w-10 h-10 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-amber-500 shadow-sm">
-                        <i class="fa-solid fa-sun"></i>
-                    </span>
-                    <i x-show="themeMode === 'light'" class="fa-solid fa-circle-check text-indigo-600 dark:text-brand-gold"></i>
-                </div>
-                <div class="font-black text-sm text-slate-900 dark:text-white">লাইট মোড</div>
-                <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">উজ্জ্বল ও পরিষ্কার interface</div>
-            </button>
-
-            <button type="button" @click="setThemeMode('dark')"
-                    class="group text-left rounded-2xl border p-4 transition-all"
-                    :class="themeMode === 'dark' ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-950/40 shadow-md shadow-indigo-500/10' : 'border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-slate-500 bg-slate-50/70 dark:bg-slate-900/40'">
-                <div class="flex items-center justify-between mb-3">
-                    <span class="w-10 h-10 rounded-xl bg-slate-900 border border-slate-700 flex items-center justify-center text-yellow-300 shadow-sm">
-                        <i class="fa-solid fa-moon"></i>
-                    </span>
-                    <i x-show="themeMode === 'dark'" class="fa-solid fa-circle-check text-indigo-600 dark:text-brand-gold"></i>
-                </div>
-                <div class="font-black text-sm text-slate-900 dark:text-white">ডার্ক মোড</div>
-                <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">চোখের জন্য আরামদায়ক dark interface</div>
-            </button>
-
-            <button type="button" @click="setThemeMode('auto')"
-                    class="group text-left rounded-2xl border p-4 transition-all"
-                    :class="themeMode === 'auto' ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-950/40 shadow-md shadow-indigo-500/10' : 'border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-slate-500 bg-slate-50/70 dark:bg-slate-900/40'">
-                <div class="flex items-center justify-between mb-3">
-                    <span class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-indigo-500 shadow-sm">
-                        <i class="fa-solid fa-circle-half-stroke"></i>
-                    </span>
-                    <i x-show="themeMode === 'auto'" class="fa-solid fa-circle-check text-indigo-600 dark:text-brand-gold"></i>
-                </div>
-                <div class="font-black text-sm text-slate-900 dark:text-white">সিস্টেম অনুযায়ী</div>
-                <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">কম্পিউটারের theme অনুসরণ করবে</div>
-            </button>
-        </div>
-
-        <div class="mt-5 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50/80 dark:bg-slate-900/50 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div>
-                <div class="text-xs font-black text-slate-800 dark:text-slate-200">বর্তমান থিম</div>
-                <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5" x-text="themeMode === 'auto' ? 'সিস্টেমের থিম স্বয়ংক্রিয়ভাবে অনুসরণ হচ্ছে' : (themeMode === 'dark' ? 'ডার্ক মোড সক্রিয়' : 'লাইট মোড সক্রিয়')"></div>
-            </div>
-            <div class="inline-flex items-center px-3 py-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-black text-slate-700 dark:text-slate-200">
-                <i class="fa-solid mr-2" :class="darkMode ? 'fa-moon text-indigo-400' : 'fa-sun text-amber-500'"></i>
-                <span x-text="darkMode ? 'Dark' : 'Light'"></span>
-            </div>
-        </div>
+    <span class="hidden sm:inline-flex items-center px-3 py-1.5 rounded-full text-[11px] font-black bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300"><i class="fa-solid fa-sliders mr-1.5"></i> Interface</span>
+  </div>
+  <div class="p-5 sm:p-6">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <button type="button" @click="setThemeMode('light')" class="aspi-theme-option group text-left rounded-2xl border p-4 transition-all" :class="themeMode === 'light' ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-950/40 shadow-md shadow-indigo-500/10' : 'border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-slate-500 bg-slate-50/70 dark:bg-slate-900/40'">
+        <div class="flex items-center justify-between mb-3"><span class="w-10 h-10 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-amber-500 shadow-sm"><i class="fa-solid fa-sun"></i></span><i x-show="themeMode === 'light'" class="fa-solid fa-circle-check text-indigo-600 dark:text-brand-gold"></i></div>
+        <div class="font-black text-sm text-slate-900 dark:text-white">লাইট মোড</div><div class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">উজ্জ্বল ও পরিষ্কার interface</div>
+      </button>
+      <button type="button" @click="setThemeMode('dark')" class="aspi-theme-option group text-left rounded-2xl border p-4 transition-all" :class="themeMode === 'dark' ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-950/40 shadow-md shadow-indigo-500/10' : 'border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-slate-500 bg-slate-50/70 dark:bg-slate-900/40'">
+        <div class="flex items-center justify-between mb-3"><span class="w-10 h-10 rounded-xl bg-slate-900 border border-slate-700 flex items-center justify-center text-yellow-300 shadow-sm"><i class="fa-solid fa-moon"></i></span><i x-show="themeMode === 'dark'" class="fa-solid fa-circle-check text-indigo-600 dark:text-brand-gold"></i></div>
+        <div class="font-black text-sm text-slate-900 dark:text-white">ডার্ক মোড</div><div class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">চোখের জন্য আরামদায়ক dark interface</div>
+      </button>
+      <button type="button" @click="setThemeMode('auto')" class="aspi-theme-option group text-left rounded-2xl border p-4 transition-all" :class="themeMode === 'auto' ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-950/40 shadow-md shadow-indigo-500/10' : 'border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-slate-500 bg-slate-50/70 dark:bg-slate-900/40'">
+        <div class="flex items-center justify-between mb-3"><span class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-indigo-500 shadow-sm"><i class="fa-solid fa-circle-half-stroke"></i></span><i x-show="themeMode === 'auto'" class="fa-solid fa-circle-check text-indigo-600 dark:text-brand-gold"></i></div>
+        <div class="font-black text-sm text-slate-900 dark:text-white">সিস্টেম অনুযায়ী</div><div class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">কম্পিউটারের theme অনুসরণ করবে</div>
+      </button>
     </div>
+    <div class="mt-5 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50/80 dark:bg-slate-900/50 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <div><div class="text-xs font-black text-slate-800 dark:text-slate-200">বর্তমান থিম</div><div class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5" x-text="themeMode === 'auto' ? 'সিস্টেমের থিম অনুসরণ হচ্ছে' : (themeMode === 'dark' ? 'ডার্ক মোড সক্রিয়' : 'লাইট মোড সক্রিয়')"></div></div>
+      <div class="inline-flex items-center px-3 py-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-black text-slate-700 dark:text-slate-200"><i class="fa-solid mr-2" :class="darkMode ? 'fa-moon text-indigo-400' : 'fa-sun text-amber-500'"></i><span x-text="darkMode ? 'Dark' : 'Light'"></span></div>
+    </div>
+  </div>
 </div>
 '''
 
-          # Insert immediately after the Settings tab heading.
           pattern = r'(?s)(<!-- Settings Tab \(With Slogan, Social Media, Founder & Typography\) -->\s*<div x-show="activeTab === \'settings\'"[^>]*>\s*<h1[^>]*>ডিজাইন, প্রতিষ্ঠাতা ও মূল সেটিংস</h1>)'
           html, n = re.subn(pattern, r'\1\n' + settings_card, html, count=1)
           if n == 0:
-              raise SystemExit('Could not find Settings tab anchor')
+              raise SystemExit('Settings tab anchor not found')
 
-          # 3) Add the setter method once, keeping existing toggleTheme() for compatibility.
           method = r'''
                 setThemeMode(mode) {
                     const next = ['light', 'dark', 'auto'].includes(mode) ? mode : 'auto';
                     this.themeMode = next;
                     localStorage.setItem('aspi_admin_theme', next);
-                    if (next === 'dark') {
-                        this.darkMode = true;
-                    } else if (next === 'light') {
-                        this.darkMode = false;
-                    } else {
-                        this.darkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                    }
+                    if (next === 'dark') this.darkMode = true;
+                    else if (next === 'light') this.darkMode = false;
+                    else this.darkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
                     this.applyThemeClass();
                 },
 '''
           if 'setThemeMode(mode)' not in html:
               html, n = re.subn(r'(\n\s*toggleTheme\(\)\s*\{)', '\n' + method + r'\1', html, count=1)
               if n == 0:
-                  raise SystemExit('Could not find toggleTheme() method')
+                  raise SystemExit('toggleTheme method not found')
 
-          # 4) Add a single compact Settings shortcut in the header only when needed.
-          # The old duplicate toggles are intentionally not reintroduced.
-          style = r'''
+          css = r'''
 <style id="aspi-admin-theme-settings-style">
-.aspi-theme-settings-card button{min-height:132px}
-@media (prefers-reduced-motion:reduce){.aspi-theme-settings-card *{transition:none!important}}
+.aspi-theme-option{min-height:132px}
+@media (prefers-reduced-motion:reduce){.aspi-theme-option{transition:none!important}}
 </style>
 '''
           if 'aspi-admin-theme-settings-style' not in html:
-              html = html.replace('</head>', style + '\n</head>', 1)
-
+              html = html.replace('</head>', css + '\n</head>', 1)
           path.write_text(html, encoding='utf-8')
-          print('Admin theme controls consolidated into Settings')
 
       - name: Verify patch
         shell: python
@@ -163,7 +110,7 @@ jobs:
           assert '<!-- ASPI ADMIN THEME SETTINGS PATCH -->' in html
           assert 'setThemeMode(mode)' in html
           assert len(re.findall(r'@click="toggleTheme\(\)"', html)) == 0
-          print('Verification passed')
+          print('Admin theme consolidation verified')
 
       - name: Commit changes
         run: |
