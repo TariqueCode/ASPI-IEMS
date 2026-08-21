@@ -1,0 +1,114 @@
+name: One-time clean production baseline
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  clean:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Clean runtime media/data references
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          db_path = Path('data/db.json')
+          if db_path.exists():
+              data = json.loads(db_path.read_text(encoding='utf-8'))
+
+              def clean_media(value):
+                  if isinstance(value, dict):
+                      out = {}
+                      for k, v in value.items():
+                          if isinstance(v, str) and 'assets/uploads/' in v:
+                              out[k] = ''
+                          else:
+                              out[k] = clean_media(v)
+                      return out
+                  if isinstance(value, list):
+                      return [clean_media(v) for v in value]
+                  return value
+
+              data = clean_media(data)
+              # Explicit production defaults: uploads are dashboard-managed only.
+              site = data.setdefault('site', {})
+              site['logo'] = ''
+              site['custom_font'] = ''
+              site['principal_img'] = ''
+              founder = site.setdefault('founder', {})
+              founder['image_url'] = ''
+
+              db_path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+
+          upload_dir = Path('assets/uploads')
+          upload_dir.mkdir(parents=True, exist_ok=True)
+          for p in upload_dir.iterdir():
+              if p.name != '.gitkeep':
+                  if p.is_file() or p.is_symlink():
+                      p.unlink()
+
+          (upload_dir / '.gitkeep').write_text('Uploads are managed from the admin dashboard.\n', encoding='utf-8')
+
+          cookie_dir = Path('cookies')
+          cookie_dir.mkdir(parents=True, exist_ok=True)
+          for p in cookie_dir.glob('*.txt'):
+              if p.is_file():
+                  p.unlink()
+          (cookie_dir / '.gitkeep').touch()
+          
+          # Remove hard-coded deleted asset fallbacks from frontend/admin.
+          replacements = {
+              'assets/uploads/1787121756078_5353.png': '',
+              '../assets/uploads/1787121756078_5353.png': '',
+              'assets/uploads/ASPI-Logo.png': '',
+              '../assets/uploads/ASPI-Logo.png': '',
+              'alpinejs@3.x.x': 'alpinejs@3.14.9',
+          }
+          for name in ['index.html', 'admin/index.html', 'founder.html']:
+              p = Path(name)
+              if not p.exists():
+                  continue
+              text = p.read_text(encoding='utf-8')
+              for old, new in replacements.items():
+                  text = text.replace(old, new)
+              p.write_text(text, encoding='utf-8')
+          PY
+
+      - name: Add runtime ignore rules
+        run: |
+          cat > .gitignore <<'EOF'
+          # Live-host runtime files
+          data/mysql-config.json
+          error_log
+          cookies/*.txt
+          assets/uploads/*
+          !assets/uploads/.gitkeep
+          EOF
+
+      - name: Remove all old automation workflows
+        run: |
+          find .github/workflows -type f -name '*.yml' -delete
+
+      - name: Commit clean baseline
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          if git diff --cached --quiet; then
+            echo 'No changes to commit.'
+            exit 0
+          fi
+          git commit -m 'Clean production baseline for fresh cPanel deployment'
+          git push origin HEAD:main
