@@ -1,0 +1,60 @@
+name: Finalize fresh deployment baseline
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Vendor Alpine locally and remove fragile fallbacks
+        run: |
+          set -e
+          mkdir -p assets/vendor
+          curl -fsSL --retry 3 https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.14.9/cdn.min.js -o assets/vendor/alpine.min.js
+
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          for name in ['admin/index.html', 'index.html', 'founder.html']:
+              p = Path(name)
+              if not p.exists():
+                  continue
+              text = p.read_text(encoding='utf-8')
+              text = text.replace('https://cdn.jsdelivr.net/npm/alpinejs@3.14.9/dist/cdn.min.js', '../assets/vendor/alpine.min.js' if name.startswith('admin/') else 'assets/vendor/alpine.min.js')
+              text = text.replace('href="../"', 'href=""')
+              text = text.replace('href="assets/uploads/"', 'href=""')
+              text = text.replace(':src="data.site.logo || \'../\'"', ':src="data.site.logo || \'\'"')
+              text = text.replace(':src="data.site.logo || \'assets/uploads/\'"', ':src="data.site.logo || \'\'"')
+              text = text.replace(':src="data.site.logo || \'\'"', ':src="data.site.logo || \'\'"')
+              text = re.sub(r'@error="\$el\.src = \$el\.src\.includes\([\"\']ASPI-Logo\.png[\"\']\) \? \'\' : \'\.\./\'"', '@error="$el.src = \'\'"', text)
+              p.write_text(text, encoding='utf-8')
+
+          admin = Path('admin/index.html')
+          if admin.exists():
+              text = admin.read_text(encoding='utf-8')
+              text = re.sub(r'\s*<!-- Default Credentials Note -->.*?<!-- Database & Hosting Connection Help Button -->', '\n                <!-- Database & Hosting Connection Help Button -->', text, flags=re.S)
+              admin.write_text(text, encoding='utf-8')
+          PY
+
+      - name: Commit and remove this one-time workflow
+        run: |
+          set -e
+          rm -f .github/workflows/*.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Finalize clean fresh deployment baseline' || exit 0
+          git push origin HEAD:main
