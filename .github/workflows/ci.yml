@@ -1,0 +1,48 @@
+name: ASPI-IEMS validation
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP 8.3
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: curl,mbstring,openssl,json,fileinfo
+          coverage: none
+
+      - name: Lint PHP files
+        shell: bash
+        run: |
+          set -e
+          find . -type f -name '*.php' -not -path './.git/*' -print0 | while IFS= read -r -d '' file; do
+            php -l "$file"
+          done
+
+      - name: Validate JSON data
+        shell: bash
+        run: php -r '$f="data/db.json"; $d=json_decode(file_get_contents($f), true); if (!is_array($d)) { fwrite(STDERR, "Invalid JSON: $f\n"); exit(1); } echo "Valid JSON: $f\n";'
+
+      - name: Validate JavaScript syntax
+        shell: bash
+        run: |
+          set -e
+          if command -v node >/dev/null 2>&1; then
+            find assets admin -type f -name '*.js' -not -path '*/vendor/*' -print0 | while IFS= read -r -d '' file; do
+              node --check "$file"
+            done
+          else
+            echo 'Node.js unavailable; skipping JavaScript syntax check.'
+          fi
